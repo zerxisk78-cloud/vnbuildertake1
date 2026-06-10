@@ -139,8 +139,3 @@ function AssetsPage() {
     </div>
   );
 }
-        </div>
-      )}
-    </div>
-  );
-}
