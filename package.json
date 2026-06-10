@@ -3,13 +3,17 @@
   "private": true,
   "sideEffects": false,
   "type": "module",
+  "main": "electron/main.cjs",
   "scripts": {
     "dev": "vite dev",
     "build": "vite build",
     "build:dev": "vite build --mode development",
     "preview": "vite preview",
     "lint": "eslint .",
-    "format": "prettier --write ."
+    "format": "prettier --write .",
+    "electron:build": "cross-env ELECTRON_BUILD=1 vite build",
+    "electron:dev": "electron .",
+    "electron:package": "cross-env ELECTRON_BUILD=1 vite build && electron-packager . VNBuilderStudio --platform=win32 --arch=x64 --out=electron-release --overwrite --ignore=node_modules --ignore=^/src --ignore=^/electron-release --ignore=^/public --ignore=^/.lovable"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",
