@@ -145,6 +145,9 @@ function CharactersPage() {
                     Pick an SDXL checkpoint in Settings to enable generation.
                   </p>
                 )}
+              </CardContent>
+            </Card>
+          ))}
         </div>
       )}
     </div>
