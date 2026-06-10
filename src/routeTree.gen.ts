@@ -9,38 +9,160 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as ProjectsProjectIdRouteImport } from './routes/projects.$projectId'
+import { Route as ProjectsProjectIdIndexRouteImport } from './routes/projects.$projectId.index'
+import { Route as ProjectsProjectIdScenesRouteImport } from './routes/projects.$projectId.scenes'
+import { Route as ProjectsProjectIdOverviewRouteImport } from './routes/projects.$projectId.overview'
+import { Route as ProjectsProjectIdLorebookRouteImport } from './routes/projects.$projectId.lorebook'
+import { Route as ProjectsProjectIdCharactersRouteImport } from './routes/projects.$projectId.characters'
+import { Route as ProjectsProjectIdAssetsRouteImport } from './routes/projects.$projectId.assets'
+import { Route as ProjectsProjectIdAiRouteImport } from './routes/projects.$projectId.ai'
 
+const SettingsRoute = SettingsRouteImport.update({
+  id: '/settings',
+  path: '/settings',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ProjectsProjectIdRoute = ProjectsProjectIdRouteImport.update({
+  id: '/projects/$projectId',
+  path: '/projects/$projectId',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ProjectsProjectIdIndexRoute = ProjectsProjectIdIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => ProjectsProjectIdRoute,
+} as any)
+const ProjectsProjectIdScenesRoute = ProjectsProjectIdScenesRouteImport.update({
+  id: '/scenes',
+  path: '/scenes',
+  getParentRoute: () => ProjectsProjectIdRoute,
+} as any)
+const ProjectsProjectIdOverviewRoute =
+  ProjectsProjectIdOverviewRouteImport.update({
+    id: '/overview',
+    path: '/overview',
+    getParentRoute: () => ProjectsProjectIdRoute,
+  } as any)
+const ProjectsProjectIdLorebookRoute =
+  ProjectsProjectIdLorebookRouteImport.update({
+    id: '/lorebook',
+    path: '/lorebook',
+    getParentRoute: () => ProjectsProjectIdRoute,
+  } as any)
+const ProjectsProjectIdCharactersRoute =
+  ProjectsProjectIdCharactersRouteImport.update({
+    id: '/characters',
+    path: '/characters',
+    getParentRoute: () => ProjectsProjectIdRoute,
+  } as any)
+const ProjectsProjectIdAssetsRoute = ProjectsProjectIdAssetsRouteImport.update({
+  id: '/assets',
+  path: '/assets',
+  getParentRoute: () => ProjectsProjectIdRoute,
+} as any)
+const ProjectsProjectIdAiRoute = ProjectsProjectIdAiRouteImport.update({
+  id: '/ai',
+  path: '/ai',
+  getParentRoute: () => ProjectsProjectIdRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/settings': typeof SettingsRoute
+  '/projects/$projectId': typeof ProjectsProjectIdRouteWithChildren
+  '/projects/$projectId/ai': typeof ProjectsProjectIdAiRoute
+  '/projects/$projectId/assets': typeof ProjectsProjectIdAssetsRoute
+  '/projects/$projectId/characters': typeof ProjectsProjectIdCharactersRoute
+  '/projects/$projectId/lorebook': typeof ProjectsProjectIdLorebookRoute
+  '/projects/$projectId/overview': typeof ProjectsProjectIdOverviewRoute
+  '/projects/$projectId/scenes': typeof ProjectsProjectIdScenesRoute
+  '/projects/$projectId/': typeof ProjectsProjectIdIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/settings': typeof SettingsRoute
+  '/projects/$projectId/ai': typeof ProjectsProjectIdAiRoute
+  '/projects/$projectId/assets': typeof ProjectsProjectIdAssetsRoute
+  '/projects/$projectId/characters': typeof ProjectsProjectIdCharactersRoute
+  '/projects/$projectId/lorebook': typeof ProjectsProjectIdLorebookRoute
+  '/projects/$projectId/overview': typeof ProjectsProjectIdOverviewRoute
+  '/projects/$projectId/scenes': typeof ProjectsProjectIdScenesRoute
+  '/projects/$projectId': typeof ProjectsProjectIdIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/settings': typeof SettingsRoute
+  '/projects/$projectId': typeof ProjectsProjectIdRouteWithChildren
+  '/projects/$projectId/ai': typeof ProjectsProjectIdAiRoute
+  '/projects/$projectId/assets': typeof ProjectsProjectIdAssetsRoute
+  '/projects/$projectId/characters': typeof ProjectsProjectIdCharactersRoute
+  '/projects/$projectId/lorebook': typeof ProjectsProjectIdLorebookRoute
+  '/projects/$projectId/overview': typeof ProjectsProjectIdOverviewRoute
+  '/projects/$projectId/scenes': typeof ProjectsProjectIdScenesRoute
+  '/projects/$projectId/': typeof ProjectsProjectIdIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths:
+    | '/'
+    | '/settings'
+    | '/projects/$projectId'
+    | '/projects/$projectId/ai'
+    | '/projects/$projectId/assets'
+    | '/projects/$projectId/characters'
+    | '/projects/$projectId/lorebook'
+    | '/projects/$projectId/overview'
+    | '/projects/$projectId/scenes'
+    | '/projects/$projectId/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to:
+    | '/'
+    | '/settings'
+    | '/projects/$projectId/ai'
+    | '/projects/$projectId/assets'
+    | '/projects/$projectId/characters'
+    | '/projects/$projectId/lorebook'
+    | '/projects/$projectId/overview'
+    | '/projects/$projectId/scenes'
+    | '/projects/$projectId'
+  id:
+    | '__root__'
+    | '/'
+    | '/settings'
+    | '/projects/$projectId'
+    | '/projects/$projectId/ai'
+    | '/projects/$projectId/assets'
+    | '/projects/$projectId/characters'
+    | '/projects/$projectId/lorebook'
+    | '/projects/$projectId/overview'
+    | '/projects/$projectId/scenes'
+    | '/projects/$projectId/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  SettingsRoute: typeof SettingsRoute
+  ProjectsProjectIdRoute: typeof ProjectsProjectIdRouteWithChildren
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/settings': {
+      id: '/settings'
+      path: '/settings'
+      fullPath: '/settings'
+      preLoaderRoute: typeof SettingsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
@@ -48,22 +170,93 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/projects/$projectId': {
+      id: '/projects/$projectId'
+      path: '/projects/$projectId'
+      fullPath: '/projects/$projectId'
+      preLoaderRoute: typeof ProjectsProjectIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/projects/$projectId/': {
+      id: '/projects/$projectId/'
+      path: '/'
+      fullPath: '/projects/$projectId/'
+      preLoaderRoute: typeof ProjectsProjectIdIndexRouteImport
+      parentRoute: typeof ProjectsProjectIdRoute
+    }
+    '/projects/$projectId/scenes': {
+      id: '/projects/$projectId/scenes'
+      path: '/scenes'
+      fullPath: '/projects/$projectId/scenes'
+      preLoaderRoute: typeof ProjectsProjectIdScenesRouteImport
+      parentRoute: typeof ProjectsProjectIdRoute
+    }
+    '/projects/$projectId/overview': {
+      id: '/projects/$projectId/overview'
+      path: '/overview'
+      fullPath: '/projects/$projectId/overview'
+      preLoaderRoute: typeof ProjectsProjectIdOverviewRouteImport
+      parentRoute: typeof ProjectsProjectIdRoute
+    }
+    '/projects/$projectId/lorebook': {
+      id: '/projects/$projectId/lorebook'
+      path: '/lorebook'
+      fullPath: '/projects/$projectId/lorebook'
+      preLoaderRoute: typeof ProjectsProjectIdLorebookRouteImport
+      parentRoute: typeof ProjectsProjectIdRoute
+    }
+    '/projects/$projectId/characters': {
+      id: '/projects/$projectId/characters'
+      path: '/characters'
+      fullPath: '/projects/$projectId/characters'
+      preLoaderRoute: typeof ProjectsProjectIdCharactersRouteImport
+      parentRoute: typeof ProjectsProjectIdRoute
+    }
+    '/projects/$projectId/assets': {
+      id: '/projects/$projectId/assets'
+      path: '/assets'
+      fullPath: '/projects/$projectId/assets'
+      preLoaderRoute: typeof ProjectsProjectIdAssetsRouteImport
+      parentRoute: typeof ProjectsProjectIdRoute
+    }
+    '/projects/$projectId/ai': {
+      id: '/projects/$projectId/ai'
+      path: '/ai'
+      fullPath: '/projects/$projectId/ai'
+      preLoaderRoute: typeof ProjectsProjectIdAiRouteImport
+      parentRoute: typeof ProjectsProjectIdRoute
+    }
   }
 }
 
+interface ProjectsProjectIdRouteChildren {
+  ProjectsProjectIdAiRoute: typeof ProjectsProjectIdAiRoute
+  ProjectsProjectIdAssetsRoute: typeof ProjectsProjectIdAssetsRoute
+  ProjectsProjectIdCharactersRoute: typeof ProjectsProjectIdCharactersRoute
+  ProjectsProjectIdLorebookRoute: typeof ProjectsProjectIdLorebookRoute
+  ProjectsProjectIdOverviewRoute: typeof ProjectsProjectIdOverviewRoute
+  ProjectsProjectIdScenesRoute: typeof ProjectsProjectIdScenesRoute
+  ProjectsProjectIdIndexRoute: typeof ProjectsProjectIdIndexRoute
+}
+
+const ProjectsProjectIdRouteChildren: ProjectsProjectIdRouteChildren = {
+  ProjectsProjectIdAiRoute: ProjectsProjectIdAiRoute,
+  ProjectsProjectIdAssetsRoute: ProjectsProjectIdAssetsRoute,
+  ProjectsProjectIdCharactersRoute: ProjectsProjectIdCharactersRoute,
+  ProjectsProjectIdLorebookRoute: ProjectsProjectIdLorebookRoute,
+  ProjectsProjectIdOverviewRoute: ProjectsProjectIdOverviewRoute,
+  ProjectsProjectIdScenesRoute: ProjectsProjectIdScenesRoute,
+  ProjectsProjectIdIndexRoute: ProjectsProjectIdIndexRoute,
+}
+
+const ProjectsProjectIdRouteWithChildren =
+  ProjectsProjectIdRoute._addFileChildren(ProjectsProjectIdRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  SettingsRoute: SettingsRoute,
+  ProjectsProjectIdRoute: ProjectsProjectIdRouteWithChildren,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}

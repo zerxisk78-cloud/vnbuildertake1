@@ -12,4 +12,8 @@ export default defineConfig({
     // nitro/vite builds from this
     server: { entry: "server" },
   },
+  // Use relative base when packaging the Electron desktop build so file:// loads work.
+  vite: {
+    base: process.env.ELECTRON_BUILD ? "./" : "/",
+  },
 });
