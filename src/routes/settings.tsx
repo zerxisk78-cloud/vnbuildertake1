@@ -17,6 +17,7 @@ import {
 } from "@/components/ui/select";
 import { useStore } from "@/lib/store";
 import { bridge, isElectron } from "@/lib/bridge";
+import { comfyListCheckpoints } from "@/lib/comfy";
 import type { DepReport } from "@/lib/types";
 import { toast } from "sonner";
 
@@ -55,6 +56,7 @@ function SettingsPage() {
   const { settings, saveSettings, loaded, load } = useStore();
   const [deps, setDeps] = useState<Record<string, DepReport>>({});
   const [scanning, setScanning] = useState(false);
+  const [checkpoints, setCheckpoints] = useState<string[]>([]);
 
   useEffect(() => {
     if (!loaded) void load();
@@ -65,14 +67,28 @@ function SettingsPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  async function loadCheckpoints(url: string) {
+    try {
+      const list = await comfyListCheckpoints(url);
+      setCheckpoints(list);
+      if (!settings.comfy.checkpoint && list.length) {
+        await saveSettings({ comfy: { ...settings.comfy, checkpoint: list[0] } });
+      }
+    } catch {
+      setCheckpoints([]);
+    }
+  }
+
   async function scan() {
     setScanning(true);
     try {
       const r = await bridge.detectAll();
       setDeps(r);
-      // Auto-fill Ollama model if empty and one available
       if (!settings.ollama.model && r.ollama?.models?.length) {
         await saveSettings({ ollama: { ...settings.ollama, model: r.ollama.models[0] } });
+      }
+      if (r.comfy?.status === "running") {
+        void loadCheckpoints(settings.comfy.url);
       }
     } finally {
       setScanning(false);
