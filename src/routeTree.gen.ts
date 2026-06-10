@@ -15,6 +15,9 @@ import { Route as ProjectsProjectIdRouteImport } from './routes/projects.$projec
 import { Route as ProjectsProjectIdIndexRouteImport } from './routes/projects.$projectId.index'
 import { Route as ProjectsProjectIdScenesRouteImport } from './routes/projects.$projectId.scenes'
 import { Route as ProjectsProjectIdOverviewRouteImport } from './routes/projects.$projectId.overview'
+import { Route as ProjectsProjectIdLorebookRouteImport } from './routes/projects.$projectId.lorebook'
+import { Route as ProjectsProjectIdCharactersRouteImport } from './routes/projects.$projectId.characters'
+import { Route as ProjectsProjectIdAssetsRouteImport } from './routes/projects.$projectId.assets'
 import { Route as ProjectsProjectIdAiRouteImport } from './routes/projects.$projectId.ai'
 
 const SettingsRoute = SettingsRouteImport.update({
@@ -48,6 +51,23 @@ const ProjectsProjectIdOverviewRoute =
     path: '/overview',
     getParentRoute: () => ProjectsProjectIdRoute,
   } as any)
+const ProjectsProjectIdLorebookRoute =
+  ProjectsProjectIdLorebookRouteImport.update({
+    id: '/lorebook',
+    path: '/lorebook',
+    getParentRoute: () => ProjectsProjectIdRoute,
+  } as any)
+const ProjectsProjectIdCharactersRoute =
+  ProjectsProjectIdCharactersRouteImport.update({
+    id: '/characters',
+    path: '/characters',
+    getParentRoute: () => ProjectsProjectIdRoute,
+  } as any)
+const ProjectsProjectIdAssetsRoute = ProjectsProjectIdAssetsRouteImport.update({
+  id: '/assets',
+  path: '/assets',
+  getParentRoute: () => ProjectsProjectIdRoute,
+} as any)
 const ProjectsProjectIdAiRoute = ProjectsProjectIdAiRouteImport.update({
   id: '/ai',
   path: '/ai',
@@ -59,6 +79,9 @@ export interface FileRoutesByFullPath {
   '/settings': typeof SettingsRoute
   '/projects/$projectId': typeof ProjectsProjectIdRouteWithChildren
   '/projects/$projectId/ai': typeof ProjectsProjectIdAiRoute
+  '/projects/$projectId/assets': typeof ProjectsProjectIdAssetsRoute
+  '/projects/$projectId/characters': typeof ProjectsProjectIdCharactersRoute
+  '/projects/$projectId/lorebook': typeof ProjectsProjectIdLorebookRoute
   '/projects/$projectId/overview': typeof ProjectsProjectIdOverviewRoute
   '/projects/$projectId/scenes': typeof ProjectsProjectIdScenesRoute
   '/projects/$projectId/': typeof ProjectsProjectIdIndexRoute
@@ -67,6 +90,9 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/settings': typeof SettingsRoute
   '/projects/$projectId/ai': typeof ProjectsProjectIdAiRoute
+  '/projects/$projectId/assets': typeof ProjectsProjectIdAssetsRoute
+  '/projects/$projectId/characters': typeof ProjectsProjectIdCharactersRoute
+  '/projects/$projectId/lorebook': typeof ProjectsProjectIdLorebookRoute
   '/projects/$projectId/overview': typeof ProjectsProjectIdOverviewRoute
   '/projects/$projectId/scenes': typeof ProjectsProjectIdScenesRoute
   '/projects/$projectId': typeof ProjectsProjectIdIndexRoute
@@ -77,6 +103,9 @@ export interface FileRoutesById {
   '/settings': typeof SettingsRoute
   '/projects/$projectId': typeof ProjectsProjectIdRouteWithChildren
   '/projects/$projectId/ai': typeof ProjectsProjectIdAiRoute
+  '/projects/$projectId/assets': typeof ProjectsProjectIdAssetsRoute
+  '/projects/$projectId/characters': typeof ProjectsProjectIdCharactersRoute
+  '/projects/$projectId/lorebook': typeof ProjectsProjectIdLorebookRoute
   '/projects/$projectId/overview': typeof ProjectsProjectIdOverviewRoute
   '/projects/$projectId/scenes': typeof ProjectsProjectIdScenesRoute
   '/projects/$projectId/': typeof ProjectsProjectIdIndexRoute
@@ -88,6 +117,9 @@ export interface FileRouteTypes {
     | '/settings'
     | '/projects/$projectId'
     | '/projects/$projectId/ai'
+    | '/projects/$projectId/assets'
+    | '/projects/$projectId/characters'
+    | '/projects/$projectId/lorebook'
     | '/projects/$projectId/overview'
     | '/projects/$projectId/scenes'
     | '/projects/$projectId/'
@@ -96,6 +128,9 @@ export interface FileRouteTypes {
     | '/'
     | '/settings'
     | '/projects/$projectId/ai'
+    | '/projects/$projectId/assets'
+    | '/projects/$projectId/characters'
+    | '/projects/$projectId/lorebook'
     | '/projects/$projectId/overview'
     | '/projects/$projectId/scenes'
     | '/projects/$projectId'
@@ -105,6 +140,9 @@ export interface FileRouteTypes {
     | '/settings'
     | '/projects/$projectId'
     | '/projects/$projectId/ai'
+    | '/projects/$projectId/assets'
+    | '/projects/$projectId/characters'
+    | '/projects/$projectId/lorebook'
     | '/projects/$projectId/overview'
     | '/projects/$projectId/scenes'
     | '/projects/$projectId/'
@@ -160,6 +198,27 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ProjectsProjectIdOverviewRouteImport
       parentRoute: typeof ProjectsProjectIdRoute
     }
+    '/projects/$projectId/lorebook': {
+      id: '/projects/$projectId/lorebook'
+      path: '/lorebook'
+      fullPath: '/projects/$projectId/lorebook'
+      preLoaderRoute: typeof ProjectsProjectIdLorebookRouteImport
+      parentRoute: typeof ProjectsProjectIdRoute
+    }
+    '/projects/$projectId/characters': {
+      id: '/projects/$projectId/characters'
+      path: '/characters'
+      fullPath: '/projects/$projectId/characters'
+      preLoaderRoute: typeof ProjectsProjectIdCharactersRouteImport
+      parentRoute: typeof ProjectsProjectIdRoute
+    }
+    '/projects/$projectId/assets': {
+      id: '/projects/$projectId/assets'
+      path: '/assets'
+      fullPath: '/projects/$projectId/assets'
+      preLoaderRoute: typeof ProjectsProjectIdAssetsRouteImport
+      parentRoute: typeof ProjectsProjectIdRoute
+    }
     '/projects/$projectId/ai': {
       id: '/projects/$projectId/ai'
       path: '/ai'
@@ -172,6 +231,9 @@ declare module '@tanstack/react-router' {
 
 interface ProjectsProjectIdRouteChildren {
   ProjectsProjectIdAiRoute: typeof ProjectsProjectIdAiRoute
+  ProjectsProjectIdAssetsRoute: typeof ProjectsProjectIdAssetsRoute
+  ProjectsProjectIdCharactersRoute: typeof ProjectsProjectIdCharactersRoute
+  ProjectsProjectIdLorebookRoute: typeof ProjectsProjectIdLorebookRoute
   ProjectsProjectIdOverviewRoute: typeof ProjectsProjectIdOverviewRoute
   ProjectsProjectIdScenesRoute: typeof ProjectsProjectIdScenesRoute
   ProjectsProjectIdIndexRoute: typeof ProjectsProjectIdIndexRoute
@@ -179,6 +241,9 @@ interface ProjectsProjectIdRouteChildren {
 
 const ProjectsProjectIdRouteChildren: ProjectsProjectIdRouteChildren = {
   ProjectsProjectIdAiRoute: ProjectsProjectIdAiRoute,
+  ProjectsProjectIdAssetsRoute: ProjectsProjectIdAssetsRoute,
+  ProjectsProjectIdCharactersRoute: ProjectsProjectIdCharactersRoute,
+  ProjectsProjectIdLorebookRoute: ProjectsProjectIdLorebookRoute,
   ProjectsProjectIdOverviewRoute: ProjectsProjectIdOverviewRoute,
   ProjectsProjectIdScenesRoute: ProjectsProjectIdScenesRoute,
   ProjectsProjectIdIndexRoute: ProjectsProjectIdIndexRoute,
