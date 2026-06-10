@@ -13,7 +13,9 @@ import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ProjectsProjectIdRouteImport } from './routes/projects.$projectId'
 import { Route as ProjectsProjectIdIndexRouteImport } from './routes/projects.$projectId.index'
+import { Route as ProjectsProjectIdScenesRouteImport } from './routes/projects.$projectId.scenes'
 import { Route as ProjectsProjectIdOverviewRouteImport } from './routes/projects.$projectId.overview'
+import { Route as ProjectsProjectIdAiRouteImport } from './routes/projects.$projectId.ai'
 
 const SettingsRoute = SettingsRouteImport.update({
   id: '/settings',
@@ -35,24 +37,38 @@ const ProjectsProjectIdIndexRoute = ProjectsProjectIdIndexRouteImport.update({
   path: '/',
   getParentRoute: () => ProjectsProjectIdRoute,
 } as any)
+const ProjectsProjectIdScenesRoute = ProjectsProjectIdScenesRouteImport.update({
+  id: '/scenes',
+  path: '/scenes',
+  getParentRoute: () => ProjectsProjectIdRoute,
+} as any)
 const ProjectsProjectIdOverviewRoute =
   ProjectsProjectIdOverviewRouteImport.update({
     id: '/overview',
     path: '/overview',
     getParentRoute: () => ProjectsProjectIdRoute,
   } as any)
+const ProjectsProjectIdAiRoute = ProjectsProjectIdAiRouteImport.update({
+  id: '/ai',
+  path: '/ai',
+  getParentRoute: () => ProjectsProjectIdRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/settings': typeof SettingsRoute
   '/projects/$projectId': typeof ProjectsProjectIdRouteWithChildren
+  '/projects/$projectId/ai': typeof ProjectsProjectIdAiRoute
   '/projects/$projectId/overview': typeof ProjectsProjectIdOverviewRoute
+  '/projects/$projectId/scenes': typeof ProjectsProjectIdScenesRoute
   '/projects/$projectId/': typeof ProjectsProjectIdIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/settings': typeof SettingsRoute
+  '/projects/$projectId/ai': typeof ProjectsProjectIdAiRoute
   '/projects/$projectId/overview': typeof ProjectsProjectIdOverviewRoute
+  '/projects/$projectId/scenes': typeof ProjectsProjectIdScenesRoute
   '/projects/$projectId': typeof ProjectsProjectIdIndexRoute
 }
 export interface FileRoutesById {
@@ -60,7 +76,9 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/settings': typeof SettingsRoute
   '/projects/$projectId': typeof ProjectsProjectIdRouteWithChildren
+  '/projects/$projectId/ai': typeof ProjectsProjectIdAiRoute
   '/projects/$projectId/overview': typeof ProjectsProjectIdOverviewRoute
+  '/projects/$projectId/scenes': typeof ProjectsProjectIdScenesRoute
   '/projects/$projectId/': typeof ProjectsProjectIdIndexRoute
 }
 export interface FileRouteTypes {
@@ -69,20 +87,26 @@ export interface FileRouteTypes {
     | '/'
     | '/settings'
     | '/projects/$projectId'
+    | '/projects/$projectId/ai'
     | '/projects/$projectId/overview'
+    | '/projects/$projectId/scenes'
     | '/projects/$projectId/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/settings'
+    | '/projects/$projectId/ai'
     | '/projects/$projectId/overview'
+    | '/projects/$projectId/scenes'
     | '/projects/$projectId'
   id:
     | '__root__'
     | '/'
     | '/settings'
     | '/projects/$projectId'
+    | '/projects/$projectId/ai'
     | '/projects/$projectId/overview'
+    | '/projects/$projectId/scenes'
     | '/projects/$projectId/'
   fileRoutesById: FileRoutesById
 }
@@ -122,6 +146,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ProjectsProjectIdIndexRouteImport
       parentRoute: typeof ProjectsProjectIdRoute
     }
+    '/projects/$projectId/scenes': {
+      id: '/projects/$projectId/scenes'
+      path: '/scenes'
+      fullPath: '/projects/$projectId/scenes'
+      preLoaderRoute: typeof ProjectsProjectIdScenesRouteImport
+      parentRoute: typeof ProjectsProjectIdRoute
+    }
     '/projects/$projectId/overview': {
       id: '/projects/$projectId/overview'
       path: '/overview'
@@ -129,16 +160,27 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ProjectsProjectIdOverviewRouteImport
       parentRoute: typeof ProjectsProjectIdRoute
     }
+    '/projects/$projectId/ai': {
+      id: '/projects/$projectId/ai'
+      path: '/ai'
+      fullPath: '/projects/$projectId/ai'
+      preLoaderRoute: typeof ProjectsProjectIdAiRouteImport
+      parentRoute: typeof ProjectsProjectIdRoute
+    }
   }
 }
 
 interface ProjectsProjectIdRouteChildren {
+  ProjectsProjectIdAiRoute: typeof ProjectsProjectIdAiRoute
   ProjectsProjectIdOverviewRoute: typeof ProjectsProjectIdOverviewRoute
+  ProjectsProjectIdScenesRoute: typeof ProjectsProjectIdScenesRoute
   ProjectsProjectIdIndexRoute: typeof ProjectsProjectIdIndexRoute
 }
 
 const ProjectsProjectIdRouteChildren: ProjectsProjectIdRouteChildren = {
+  ProjectsProjectIdAiRoute: ProjectsProjectIdAiRoute,
   ProjectsProjectIdOverviewRoute: ProjectsProjectIdOverviewRoute,
+  ProjectsProjectIdScenesRoute: ProjectsProjectIdScenesRoute,
   ProjectsProjectIdIndexRoute: ProjectsProjectIdIndexRoute,
 }
 
