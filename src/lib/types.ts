@@ -130,6 +130,8 @@ export interface ComfySettings {
   path: string;
   autoLaunch: boolean;
   extraArgs: string;
+  /** Selected SDXL checkpoint filename, e.g. "sd_xl_base_1.0.safetensors". */
+  checkpoint: string;
 }
 
 export interface XttsSettings {
@@ -161,6 +163,7 @@ export const DEFAULT_SETTINGS: Settings = {
     path: "",
     autoLaunch: false,
     extraArgs: "",
+    checkpoint: "",
   },
   xtts: { url: "http://127.0.0.1:8020", path: "", autoLaunch: false },
   renpy: { sdkPath: "" },
