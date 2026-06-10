@@ -252,6 +252,42 @@ function SettingsPage() {
                   }
                 />
               </div>
+              <div>
+                <Label>Default SDXL checkpoint</Label>
+                {checkpoints.length ? (
+                  <Select
+                    value={settings.comfy.checkpoint}
+                    onValueChange={(v) =>
+                      saveSettings({ comfy: { ...settings.comfy, checkpoint: v } })
+                    }
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Choose a checkpoint" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {checkpoints.map((m) => (
+                        <SelectItem key={m} value={m}>
+                          {m}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                ) : (
+                  <Input
+                    value={settings.comfy.checkpoint}
+                    placeholder="sd_xl_base_1.0.safetensors"
+                    onChange={(e) =>
+                      saveSettings({
+                        comfy: { ...settings.comfy, checkpoint: e.target.value },
+                      })
+                    }
+                  />
+                )}
+                <p className="mt-1 text-xs text-muted-foreground">
+                  Start ComfyUI and click Re-scan to populate this list from{" "}
+                  <code>/object_info</code>.
+                </p>
+              </div>
               {!deps.comfy || deps.comfy.status === "missing" ? (
                 <Button
                   variant="ghost"
