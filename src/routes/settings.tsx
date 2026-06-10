@@ -17,6 +17,7 @@ import {
 } from "@/components/ui/select";
 import { useStore } from "@/lib/store";
 import { bridge, isElectron } from "@/lib/bridge";
+import { comfyListCheckpoints } from "@/lib/comfy";
 import type { DepReport } from "@/lib/types";
 import { toast } from "sonner";
 
@@ -55,6 +56,7 @@ function SettingsPage() {
   const { settings, saveSettings, loaded, load } = useStore();
   const [deps, setDeps] = useState<Record<string, DepReport>>({});
   const [scanning, setScanning] = useState(false);
+  const [checkpoints, setCheckpoints] = useState<string[]>([]);
 
   useEffect(() => {
     if (!loaded) void load();
@@ -65,14 +67,28 @@ function SettingsPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  async function loadCheckpoints(url: string) {
+    try {
+      const list = await comfyListCheckpoints(url);
+      setCheckpoints(list);
+      if (!settings.comfy.checkpoint && list.length) {
+        await saveSettings({ comfy: { ...settings.comfy, checkpoint: list[0] } });
+      }
+    } catch {
+      setCheckpoints([]);
+    }
+  }
+
   async function scan() {
     setScanning(true);
     try {
       const r = await bridge.detectAll();
       setDeps(r);
-      // Auto-fill Ollama model if empty and one available
       if (!settings.ollama.model && r.ollama?.models?.length) {
         await saveSettings({ ollama: { ...settings.ollama, model: r.ollama.models[0] } });
+      }
+      if (r.comfy?.status === "running") {
+        void loadCheckpoints(settings.comfy.url);
       }
     } finally {
       setScanning(false);
@@ -235,6 +251,42 @@ function SettingsPage() {
                     saveSettings({ comfy: { ...settings.comfy, autoLaunch: v } })
                   }
                 />
+              </div>
+              <div>
+                <Label>Default SDXL checkpoint</Label>
+                {checkpoints.length ? (
+                  <Select
+                    value={settings.comfy.checkpoint}
+                    onValueChange={(v) =>
+                      saveSettings({ comfy: { ...settings.comfy, checkpoint: v } })
+                    }
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Choose a checkpoint" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {checkpoints.map((m) => (
+                        <SelectItem key={m} value={m}>
+                          {m}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                ) : (
+                  <Input
+                    value={settings.comfy.checkpoint}
+                    placeholder="sd_xl_base_1.0.safetensors"
+                    onChange={(e) =>
+                      saveSettings({
+                        comfy: { ...settings.comfy, checkpoint: e.target.value },
+                      })
+                    }
+                  />
+                )}
+                <p className="mt-1 text-xs text-muted-foreground">
+                  Start ComfyUI and click Re-scan to populate this list from{" "}
+                  <code>/object_info</code>.
+                </p>
               </div>
               {!deps.comfy || deps.comfy.status === "missing" ? (
                 <Button

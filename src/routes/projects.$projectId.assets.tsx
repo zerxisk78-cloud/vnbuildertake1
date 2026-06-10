@@ -15,6 +15,8 @@ import {
 } from "@/components/ui/select";
 import { useStore } from "@/lib/store";
 import type { AssetKind } from "@/lib/types";
+import { GenerateImageButton } from "@/components/GenerateImageButton";
+import { PRESETS } from "@/lib/workflows";
 
 const KINDS: AssetKind[] = ["background", "sprite", "cg", "music", "sfx", "voice", "font", "video"];
 
@@ -25,6 +27,7 @@ export const Route = createFileRoute("/projects/$projectId/assets")({
 function AssetsPage() {
   const { projectId } = useParams({ from: "/projects/$projectId/assets" });
   const project = useStore((s) => s.getProject(projectId))!;
+  const checkpoint = useStore((s) => s.settings.comfy.checkpoint);
   const addAsset = useStore((s) => s.addAsset);
   const updateAsset = useStore((s) => s.updateAsset);
   const deleteAsset = useStore((s) => s.deleteAsset);
@@ -112,6 +115,22 @@ function AssetsPage() {
                       className="max-h-40 rounded border border-border object-contain"
                     />
                   )}
+                {(a.kind === "background" || a.kind === "sprite" || a.kind === "cg") && (
+                  <GenerateImageButton
+                    label={a.url ? "Regenerate" : "Generate"}
+                    disabled={!checkpoint || !(a.prompt ?? "").trim()}
+                    workflow={
+                      a.kind === "background"
+                        ? PRESETS.background(checkpoint, a.prompt ?? a.name)
+                        : a.kind === "cg"
+                          ? PRESETS.cg(checkpoint, a.prompt ?? a.name)
+                          : PRESETS.characterPortrait(checkpoint, a.prompt ?? a.name)
+                    }
+                    onDone={(url) =>
+                      updateAsset(projectId, a.id, { url, source: "generated" })
+                    }
+                  />
+                )}
               </CardContent>
             </Card>
           ))}

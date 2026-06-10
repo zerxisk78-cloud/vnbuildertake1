@@ -7,6 +7,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useStore } from "@/lib/store";
+import { GenerateImageButton } from "@/components/GenerateImageButton";
+import { PRESETS } from "@/lib/workflows";
+import { toast } from "sonner";
 
 export const Route = createFileRoute("/projects/$projectId/characters")({
   component: CharactersPage,
@@ -15,9 +18,11 @@ export const Route = createFileRoute("/projects/$projectId/characters")({
 function CharactersPage() {
   const { projectId } = useParams({ from: "/projects/$projectId/characters" });
   const project = useStore((s) => s.getProject(projectId))!;
+  const checkpoint = useStore((s) => s.settings.comfy.checkpoint);
   const addCharacter = useStore((s) => s.addCharacter);
   const updateCharacter = useStore((s) => s.updateCharacter);
   const deleteCharacter = useStore((s) => s.deleteCharacter);
+  const addAsset = useStore((s) => s.addAsset);
   const [name, setName] = useState("");
 
   return (
@@ -106,6 +111,40 @@ function CharactersPage() {
                     placeholder="masterpiece, full body, …"
                   />
                 </div>
+                {c.portraitUrl && (
+                  <img
+                    src={c.portraitUrl}
+                    alt={`${c.name} portrait`}
+                    className="max-h-56 rounded border border-border object-contain"
+                  />
+                )}
+                <div className="flex items-center gap-2">
+                  <GenerateImageButton
+                    label="Generate portrait"
+                    disabled={!checkpoint || !(c.portraitPrompt ?? "").trim()}
+                    workflow={PRESETS.characterPortrait(
+                      checkpoint,
+                      c.portraitPrompt ?? c.name,
+                    )}
+                    onDone={async (url) => {
+                      await updateCharacter(projectId, c.id, { portraitUrl: url });
+                      await addAsset(projectId, {
+                        kind: "sprite",
+                        name: `${c.name}_portrait`,
+                        source: "generated",
+                        url,
+                        prompt: c.portraitPrompt,
+                        workflow: "characterPortrait",
+                      });
+                      toast.success(`Saved portrait for ${c.name}`);
+                    }}
+                  />
+                </div>
+                {!checkpoint && (
+                  <p className="text-xs text-muted-foreground">
+                    Pick an SDXL checkpoint in Settings to enable generation.
+                  </p>
+                )}
               </CardContent>
             </Card>
           ))}
