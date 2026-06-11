@@ -165,6 +165,39 @@ function ScenesPage() {
                     updateScene(projectId, selected.id, { musicPrompt: e.target.value })
                   }
                 />
+                <div className="mt-2 flex items-center gap-2">
+                  <GenerateAudioButton
+                    label="Generate music"
+                    disabled={!(selected.musicPrompt ?? "").trim()}
+                    workflow={AUDIO_PRESETS.music(selected.musicPrompt ?? "", 20)}
+                    onDone={async (url) => {
+                      const a = await useStore
+                        .getState()
+                        .addAsset(projectId, {
+                          kind: "music",
+                          name: `${selected.title}_music`,
+                          source: "generated",
+                          url,
+                          prompt: selected.musicPrompt,
+                          workflow: "musicGen",
+                        });
+                      await updateScene(projectId, selected.id, { music: a.id });
+                    }}
+                  />
+                  {selected.music && (
+                    <Button
+                      size="icon"
+                      variant="ghost"
+                      onClick={() => {
+                        const a = project.assets.find((x) => x.id === selected.music);
+                        if (a?.url) new Audio(a.url).play();
+                      }}
+                      title="Preview music"
+                    >
+                      <Play className="h-3 w-3" />
+                    </Button>
+                  )}
+                </div>
               </div>
             </div>
 
