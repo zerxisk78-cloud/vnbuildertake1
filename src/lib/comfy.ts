@@ -105,26 +105,31 @@ export async function runWorkflow(opts: QueueOptions): Promise<GeneratedImage[]>
       if (h?.outputs) {
         const images: GeneratedImage[] = [];
         for (const out of Object.values<any>(h.outputs)) {
-          if (out?.images?.length) {
-            for (const img of out.images) {
-              const q = new URLSearchParams({
-                filename: img.filename,
-                subfolder: img.subfolder ?? "",
-                type: img.type ?? "output",
-              });
-              images.push({
-                url: `${url}/view?${q.toString()}`,
-                filename: img.filename,
-                subfolder: img.subfolder ?? "",
-                type: img.type ?? "output",
-                promptId: prompt_id,
-              });
-            }
+          // SaveImage → out.images; SaveAudio → out.audio; both have same shape.
+          const files = [...(out?.images ?? []), ...(out?.audio ?? [])];
+          for (const f of files) {
+            const q = new URLSearchParams({
+              filename: f.filename,
+              subfolder: f.subfolder ?? "",
+              type: f.type ?? "output",
+            });
+            images.push({
+              url: `${url}/view?${q.toString()}`,
+              filename: f.filename,
+              subfolder: f.subfolder ?? "",
+              type: f.type ?? "output",
+              promptId: prompt_id,
+            });
           }
         }
         if (images.length) {
           onProgress?.(100, "Done");
           return images;
+        }
+        // No file outputs but execution finished (status_str = success) → done with nothing.
+        if (h?.status?.completed === true) {
+          onProgress?.(100, "Done");
+          return [];
         }
       }
       await new Promise((r) => setTimeout(r, 750));
