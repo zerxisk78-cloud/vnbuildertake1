@@ -18,6 +18,7 @@ import {
 import { useStore } from "@/lib/store";
 import { bridge, isElectron } from "@/lib/bridge";
 import { comfyListCheckpoints } from "@/lib/comfy";
+import { xttsListSpeakers, xttsListLanguages } from "@/lib/xtts";
 import type { DepReport } from "@/lib/types";
 import { toast } from "sonner";
 
@@ -57,6 +58,8 @@ function SettingsPage() {
   const [deps, setDeps] = useState<Record<string, DepReport>>({});
   const [scanning, setScanning] = useState(false);
   const [checkpoints, setCheckpoints] = useState<string[]>([]);
+  const [speakers, setSpeakers] = useState<string[]>([]);
+  const [languages, setLanguages] = useState<string[]>([]);
 
   useEffect(() => {
     if (!loaded) void load();
@@ -90,9 +93,21 @@ function SettingsPage() {
       if (r.comfy?.status === "running") {
         void loadCheckpoints(settings.comfy.url);
       }
+      if (r.xtts?.status === "running") {
+        void loadXttsMeta(settings.xtts.url);
+      }
     } finally {
       setScanning(false);
     }
+  }
+
+  async function loadXttsMeta(url: string) {
+    const [sp, lg] = await Promise.all([
+      xttsListSpeakers(url).catch(() => []),
+      xttsListLanguages(url).catch(() => []),
+    ]);
+    setSpeakers(sp);
+    setLanguages(lg);
   }
 
   async function pick(target: "comfy" | "xtts" | "renpy") {
