@@ -172,6 +172,91 @@ ipcMain.handle("renpy:export", (_e, projectId, targetDir, contents) => {
   return targetDir;
 });
 
+// Download a list of {url, dest} into targetDir. Skips blob: URLs (those are
+// uploaded as base64 by the caller via renpy:writeBinary).
+ipcMain.handle("renpy:downloadAssets", async (_e, targetDir, manifest) => {
+  const results = [];
+  for (const item of manifest) {
+    try {
+      if (!/^https?:\/\//i.test(item.url)) {
+        results.push({ dest: item.dest, ok: false, error: "non-http url (use writeBinary)" });
+        continue;
+      }
+      const buf = await new Promise((resolve, reject) => {
+        const lib = item.url.startsWith("https") ? require("node:https") : require("node:http");
+        lib
+          .get(item.url, (res) => {
+            if (res.statusCode && res.statusCode >= 400) {
+              reject(new Error(`HTTP ${res.statusCode}`));
+              return;
+            }
+            const chunks = [];
+            res.on("data", (c) => chunks.push(c));
+            res.on("end", () => resolve(Buffer.concat(chunks)));
+          })
+          .on("error", reject);
+      });
+      const file = path.join(targetDir, item.dest);
+      fs.mkdirSync(path.dirname(file), { recursive: true });
+      fs.writeFileSync(file, buf);
+      results.push({ dest: item.dest, ok: true });
+    } catch (err) {
+      results.push({ dest: item.dest, ok: false, error: String(err.message ?? err) });
+    }
+  }
+  return results;
+});
+
+// Write a single binary asset uploaded as base64 from the renderer (used for
+// blob: URLs the main process can't fetch — e.g. XTTS voice clips).
+ipcMain.handle("renpy:writeBinary", (_e, targetDir, relPath, base64) => {
+  const file = path.join(targetDir, relPath);
+  fs.mkdirSync(path.dirname(file), { recursive: true });
+  fs.writeFileSync(file, Buffer.from(base64, "base64"));
+  return file;
+});
+
+// ----- Ren'Py build (invokes SDK launcher) -----
+ipcMain.handle("renpy:build", (_e, projectDir) => {
+  const settings = readJson(SETTINGS_FILE, {});
+  const sdk = settings?.renpy?.sdkPath;
+  if (!sdk) return { ok: false, error: "Ren'Py SDK path not set in Settings." };
+  const exe =
+    process.platform === "win32"
+      ? path.join(sdk, "renpy.exe")
+      : path.join(sdk, "renpy.sh");
+  if (!fs.existsSync(exe)) return { ok: false, error: `Ren'Py launcher not found at ${exe}` };
+  // `renpy.exe <project> distribute` builds PC/Mac/Linux .zips under <project>/dist.
+  const child = spawn(exe, [projectDir, "distribute"], {
+    cwd: sdk,
+    detached: false,
+    shell: process.platform === "win32",
+  });
+  managed.set(`renpy-build-${Date.now()}`, child);
+  return { ok: true, message: `Building distributions under ${projectDir}/dist…` };
+});
+
+// Open the Ren'Py SDK launcher pointing at a project (lets the user playtest).
+ipcMain.handle("renpy:launch", (_e, projectDir) => {
+  const settings = readJson(SETTINGS_FILE, {});
+  const sdk = settings?.renpy?.sdkPath;
+  if (!sdk) return { ok: false, error: "Ren'Py SDK path not set in Settings." };
+  const exe =
+    process.platform === "win32"
+      ? path.join(sdk, "renpy.exe")
+      : path.join(sdk, "renpy.sh");
+  if (!fs.existsSync(exe)) return { ok: false, error: `Ren'Py launcher not found at ${exe}` };
+  const child = spawn(exe, [projectDir], {
+    cwd: sdk,
+    detached: true,
+    shell: process.platform === "win32",
+  });
+  child.unref();
+  return { ok: true };
+});
+
+ipcMain.handle("shell:openPath", (_e, p) => shell.openPath(p));
+
 // ----- Window -----
 function createWindow() {
   const win = new BrowserWindow({
