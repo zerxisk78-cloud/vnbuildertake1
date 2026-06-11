@@ -361,6 +361,33 @@ function LineList({ projectId, scene }: { projectId: string; scene: Scene }) {
             />
           )}
 
+          {(l.type === "dialogue" || l.type === "narration") && l.text.trim() && (
+            <div className="mt-2 flex items-center gap-2">
+              <GenerateVoiceButton
+                text={l.text}
+                speaker={
+                  l.type === "dialogue"
+                    ? project.characters.find((c) => c.id === l.characterId)?.voiceStyle
+                    : undefined
+                }
+                onDone={(url) => updateLine(l.id, { voiceUrl: url })}
+              />
+              {l.voiceUrl && (
+                <>
+                  <Button
+                    size="icon"
+                    variant="ghost"
+                    onClick={() => new Audio(l.voiceUrl!).play()}
+                    title="Play voice"
+                  >
+                    <Play className="h-3 w-3" />
+                  </Button>
+                  <span className="text-xs text-emerald-400">voiced</span>
+                </>
+              )}
+            </div>
+          )}
+
           {l.type === "choice" && (
             <div className="space-y-2">
               {(l.choices ?? []).map((c, ci) => (
