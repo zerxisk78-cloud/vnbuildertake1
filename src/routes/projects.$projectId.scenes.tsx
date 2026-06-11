@@ -1,6 +1,6 @@
 import { createFileRoute, useParams } from "@tanstack/react-router";
 import { useState } from "react";
-import { Plus, Trash2, ChevronDown, ChevronRight } from "lucide-react";
+import { Plus, Trash2, ChevronDown, ChevronRight, Play } from "lucide-react";
 import { nanoid } from "nanoid";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -17,6 +17,9 @@ import {
 import { useStore } from "@/lib/store";
 import type { LineType, ScriptLine, Scene } from "@/lib/types";
 import { renderSceneRpy } from "@/lib/renpy";
+import { GenerateAudioButton } from "@/components/GenerateAudioButton";
+import { GenerateVoiceButton } from "@/components/GenerateVoiceButton";
+import { AUDIO_PRESETS } from "@/lib/audio-workflows";
 
 export const Route = createFileRoute("/projects/$projectId/scenes")({
   component: ScenesPage,
