@@ -47,6 +47,8 @@ export interface ScriptLine {
   text: string;
   /** For choices: array of { label, gotoSceneId } */
   choices?: { id: string; label: string; gotoSceneId?: string }[];
+  /** Generated voice URL (XTTS blob URL or ComfyUI /view URL). */
+  voiceUrl?: string;
   /** Optional notes */
   note?: string;
 }
@@ -138,6 +140,8 @@ export interface XttsSettings {
   url: string;
   path: string;
   autoLaunch: boolean;
+  language: string;
+  defaultSpeaker: string;
 }
 
 export interface RenpySettings {
@@ -165,7 +169,13 @@ export const DEFAULT_SETTINGS: Settings = {
     extraArgs: "",
     checkpoint: "",
   },
-  xtts: { url: "http://127.0.0.1:8020", path: "", autoLaunch: false },
+  xtts: {
+    url: "http://127.0.0.1:8020",
+    path: "",
+    autoLaunch: false,
+    language: "en",
+    defaultSpeaker: "female_01",
+  },
   renpy: { sdkPath: "" },
 };
 

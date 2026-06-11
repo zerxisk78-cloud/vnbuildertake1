@@ -18,6 +18,7 @@ import {
 import { useStore } from "@/lib/store";
 import { bridge, isElectron } from "@/lib/bridge";
 import { comfyListCheckpoints } from "@/lib/comfy";
+import { xttsListSpeakers, xttsListLanguages } from "@/lib/xtts";
 import type { DepReport } from "@/lib/types";
 import { toast } from "sonner";
 
@@ -57,6 +58,8 @@ function SettingsPage() {
   const [deps, setDeps] = useState<Record<string, DepReport>>({});
   const [scanning, setScanning] = useState(false);
   const [checkpoints, setCheckpoints] = useState<string[]>([]);
+  const [speakers, setSpeakers] = useState<string[]>([]);
+  const [languages, setLanguages] = useState<string[]>([]);
 
   useEffect(() => {
     if (!loaded) void load();
@@ -90,9 +93,21 @@ function SettingsPage() {
       if (r.comfy?.status === "running") {
         void loadCheckpoints(settings.comfy.url);
       }
+      if (r.xtts?.status === "running") {
+        void loadXttsMeta(settings.xtts.url);
+      }
     } finally {
       setScanning(false);
     }
+  }
+
+  async function loadXttsMeta(url: string) {
+    const [sp, lg] = await Promise.all([
+      xttsListSpeakers(url).catch(() => []),
+      xttsListLanguages(url).catch(() => []),
+    ]);
+    setSpeakers(sp);
+    setLanguages(lg);
   }
 
   async function pick(target: "comfy" | "xtts" | "renpy") {
@@ -329,6 +344,60 @@ function SettingsPage() {
                       <FolderOpen className="h-4 w-4" />
                     </Button>
                   </div>
+                </div>
+              </div>
+              <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+                <div>
+                  <Label>Default speaker</Label>
+                  {speakers.length ? (
+                    <Select
+                      value={settings.xtts.defaultSpeaker}
+                      onValueChange={(v) =>
+                        saveSettings({ xtts: { ...settings.xtts, defaultSpeaker: v } })
+                      }
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Choose a speaker" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {speakers.map((s) => (
+                          <SelectItem key={s} value={s}>
+                            {s}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  ) : (
+                    <Input
+                      value={settings.xtts.defaultSpeaker}
+                      placeholder="female_01"
+                      onChange={(e) =>
+                        saveSettings({
+                          xtts: { ...settings.xtts, defaultSpeaker: e.target.value },
+                        })
+                      }
+                    />
+                  )}
+                </div>
+                <div>
+                  <Label>Language</Label>
+                  <Select
+                    value={settings.xtts.language}
+                    onValueChange={(v) =>
+                      saveSettings({ xtts: { ...settings.xtts, language: v } })
+                    }
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {(languages.length ? languages : ["en"]).map((l) => (
+                        <SelectItem key={l} value={l}>
+                          {l}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
               </div>
               <Button

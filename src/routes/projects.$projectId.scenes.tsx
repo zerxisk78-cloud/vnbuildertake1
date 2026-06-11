@@ -1,6 +1,6 @@
 import { createFileRoute, useParams } from "@tanstack/react-router";
 import { useState } from "react";
-import { Plus, Trash2, ChevronDown, ChevronRight } from "lucide-react";
+import { Plus, Trash2, ChevronDown, ChevronRight, Play } from "lucide-react";
 import { nanoid } from "nanoid";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -17,6 +17,9 @@ import {
 import { useStore } from "@/lib/store";
 import type { LineType, ScriptLine, Scene } from "@/lib/types";
 import { renderSceneRpy } from "@/lib/renpy";
+import { GenerateAudioButton } from "@/components/GenerateAudioButton";
+import { GenerateVoiceButton } from "@/components/GenerateVoiceButton";
+import { AUDIO_PRESETS } from "@/lib/audio-workflows";
 
 export const Route = createFileRoute("/projects/$projectId/scenes")({
   component: ScenesPage,
@@ -162,6 +165,39 @@ function ScenesPage() {
                     updateScene(projectId, selected.id, { musicPrompt: e.target.value })
                   }
                 />
+                <div className="mt-2 flex items-center gap-2">
+                  <GenerateAudioButton
+                    label="Generate music"
+                    disabled={!(selected.musicPrompt ?? "").trim()}
+                    workflow={AUDIO_PRESETS.music(selected.musicPrompt ?? "", 20)}
+                    onDone={async (url) => {
+                      const a = await useStore
+                        .getState()
+                        .addAsset(projectId, {
+                          kind: "music",
+                          name: `${selected.title}_music`,
+                          source: "generated",
+                          url,
+                          prompt: selected.musicPrompt,
+                          workflow: "musicGen",
+                        });
+                      await updateScene(projectId, selected.id, { music: a.id });
+                    }}
+                  />
+                  {selected.music && (
+                    <Button
+                      size="icon"
+                      variant="ghost"
+                      onClick={() => {
+                        const a = project.assets.find((x) => x.id === selected.music);
+                        if (a?.url) new Audio(a.url).play();
+                      }}
+                      title="Preview music"
+                    >
+                      <Play className="h-3 w-3" />
+                    </Button>
+                  )}
+                </div>
               </div>
             </div>
 
@@ -323,6 +359,33 @@ function LineList({ projectId, scene }: { projectId: string; scene: Scene }) {
               }
               className="min-h-[60px]"
             />
+          )}
+
+          {(l.type === "dialogue" || l.type === "narration") && l.text.trim() && (
+            <div className="mt-2 flex items-center gap-2">
+              <GenerateVoiceButton
+                text={l.text}
+                speaker={
+                  l.type === "dialogue"
+                    ? project.characters.find((c) => c.id === l.characterId)?.voiceStyle
+                    : undefined
+                }
+                onDone={(url) => updateLine(l.id, { voiceUrl: url })}
+              />
+              {l.voiceUrl && (
+                <>
+                  <Button
+                    size="icon"
+                    variant="ghost"
+                    onClick={() => new Audio(l.voiceUrl!).play()}
+                    title="Play voice"
+                  >
+                    <Play className="h-3 w-3" />
+                  </Button>
+                  <span className="text-xs text-emerald-400">voiced</span>
+                </>
+              )}
+            </div>
           )}
 
           {l.type === "choice" && (
