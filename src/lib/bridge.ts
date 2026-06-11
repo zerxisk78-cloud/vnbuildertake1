@@ -25,7 +25,15 @@ export interface LovableApi {
   stopService(name: "comfy" | "xtts" | "ollama"): Promise<void>;
   serviceStatus(): Promise<Record<string, "stopped" | "starting" | "managed" | "attached" | "error">>;
   exportRenpy(projectId: string, targetDir: string, contents: Record<string, string>): Promise<string>;
+  downloadAssets(
+    targetDir: string,
+    manifest: { url: string; dest: string }[],
+  ): Promise<{ dest: string; ok: boolean; error?: string }[]>;
+  writeBinary(targetDir: string, relPath: string, base64: string): Promise<string>;
+  buildRenpy(projectDir: string): Promise<{ ok: boolean; error?: string; message?: string }>;
+  launchRenpy(projectDir: string): Promise<{ ok: boolean; error?: string }>;
   openExternal(url: string): Promise<void>;
+  openPath(p: string): Promise<void>;
 }
 
 export const isElectron = (): boolean =>
@@ -139,8 +147,6 @@ export const bridge = {
       if (!dir) return null;
       return window.lovableApi!.exportRenpy(projectId, dir, contents);
     }
-    // Browser fallback: bundle as a downloadable .zip-ish… we just download each file as JSON.
-    // Simplest: download a single combined .txt for preview.
     const blob = new Blob(
       [
         Object.entries(contents)
@@ -156,6 +162,41 @@ export const bridge = {
     a.click();
     URL.revokeObjectURL(url);
     return "downloaded preview .txt";
+  },
+
+  async downloadAssets(targetDir: string, manifest: { url: string; dest: string }[]) {
+    if (!isElectron()) return [];
+    // Split: http(s) URLs go to the main process; blob: URLs are uploaded as base64.
+    const remote = manifest.filter((m) => /^https?:\/\//i.test(m.url));
+    const local = manifest.filter((m) => !/^https?:\/\//i.test(m.url));
+    const remoteResults = remote.length
+      ? await window.lovableApi!.downloadAssets(targetDir, remote)
+      : [];
+    const localResults: { dest: string; ok: boolean; error?: string }[] = [];
+    for (const m of local) {
+      try {
+        const blob = await fetch(m.url).then((r) => r.blob());
+        const buf = new Uint8Array(await blob.arrayBuffer());
+        let bin = "";
+        for (let i = 0; i < buf.length; i++) bin += String.fromCharCode(buf[i]);
+        const b64 = btoa(bin);
+        await window.lovableApi!.writeBinary(targetDir, m.dest, b64);
+        localResults.push({ dest: m.dest, ok: true });
+      } catch (e) {
+        localResults.push({ dest: m.dest, ok: false, error: (e as Error).message });
+      }
+    }
+    return [...remoteResults, ...localResults];
+  },
+
+  async buildRenpy(projectDir: string) {
+    if (!isElectron()) return { ok: false, error: "Desktop app only" };
+    return window.lovableApi!.buildRenpy(projectDir);
+  },
+
+  async launchRenpy(projectDir: string) {
+    if (!isElectron()) return { ok: false, error: "Desktop app only" };
+    return window.lovableApi!.launchRenpy(projectDir);
   },
 };
 
