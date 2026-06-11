@@ -27,10 +27,13 @@ function renderLine(line: ScriptLine, project: Project): string {
       const v = c ? characterVar(c) : "narrator";
       const expr = line.expression && c ? ` ${slug(c.name)}_${slug(line.expression)}` : "";
       const show = expr ? `    show${expr} at center\n` : "";
-      return `${show}    ${v} "${safeText(line.text)}"`;
+      const voice = line.voiceUrl ? `    voice "audio/voice/${line.id}.wav"\n` : "";
+      return `${show}${voice}    ${v} "${safeText(line.text)}"`;
     }
-    case "narration":
-      return `    "${safeText(line.text)}"`;
+    case "narration": {
+      const voice = line.voiceUrl ? `    voice "audio/voice/${line.id}.wav"\n` : "";
+      return `${voice}    "${safeText(line.text)}"`;
+    }
     case "choice": {
       if (!line.choices?.length) return `    # (empty choice)`;
       const opts = line.choices
@@ -42,9 +45,9 @@ function renderLine(line: ScriptLine, project: Project): string {
       return `    menu:\n${opts}`;
     }
     case "sfx":
-      return `    play sound "${safeText(line.text)}"`;
+      return `    play sound "audio/sfx/${slug(line.text)}.wav"`;
     case "music":
-      return `    play music "${safeText(line.text)}" fadeout 1.0 fadein 1.0`;
+      return `    play music "audio/music/${slug(line.text)}.wav" fadeout 1.0 fadein 1.0`;
     case "transition":
       return `    with ${line.text || "dissolve"}`;
     case "show": {
@@ -68,11 +71,27 @@ function scene_label(sceneId: string): string {
 }
 
 export function renderSceneRpy(scene: Scene, project: Project): string {
+  const bgAsset = project.assets.find(
+    (a) => a.id === scene.background && a.kind === "background",
+  );
+  const bgLine = bgAsset
+    ? `    scene bg ${slug(bgAsset.name)}`
+    : scene.background
+      ? `    scene bg ${slug(scene.background)}`
+      : `    scene black`;
+  const musicAsset = project.assets.find(
+    (a) => a.id === scene.music && (a.kind === "music" || a.kind === "sfx"),
+  );
+  const musicLine = musicAsset
+    ? `    play music "audio/music/${slug(musicAsset.name)}.wav" fadeout 1 fadein 1`
+    : scene.music
+      ? `    play music "audio/music/${slug(scene.music)}.wav" fadeout 1 fadein 1`
+      : "";
   const header = [
     `label ${scene_label(scene.id)}:`,
-    scene.background ? `    scene bg ${slug(scene.background)}` : `    scene black`,
-    scene.music ? `    play music "${safeText(scene.music)}" fadeout 1 fadein 1` : "",
-    scene.ambient ? `    play ambient "${safeText(scene.ambient)}"` : "",
+    bgLine,
+    musicLine,
+    scene.ambient ? `    play ambient "audio/ambient/${slug(scene.ambient)}.wav"` : "",
   ]
     .filter(Boolean)
     .join("\n");
