@@ -1,6 +1,6 @@
 import { createFileRoute, useParams } from "@tanstack/react-router";
 import { useState } from "react";
-import { Plus, Trash2 } from "lucide-react";
+import { Plus, Trash2, Play } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -16,7 +16,10 @@ import {
 import { useStore } from "@/lib/store";
 import type { AssetKind } from "@/lib/types";
 import { GenerateImageButton } from "@/components/GenerateImageButton";
+import { GenerateAudioButton } from "@/components/GenerateAudioButton";
+import { GenerateVoiceButton } from "@/components/GenerateVoiceButton";
 import { PRESETS } from "@/lib/workflows";
+import { AUDIO_PRESETS } from "@/lib/audio-workflows";
 
 const KINDS: AssetKind[] = ["background", "sprite", "cg", "music", "sfx", "voice", "font", "video"];
 
@@ -130,6 +133,53 @@ function AssetsPage() {
                       updateAsset(projectId, a.id, { url, source: "generated" })
                     }
                   />
+                )}
+                {(a.kind === "music" || a.kind === "sfx") && (
+                  <div className="flex items-center gap-2">
+                    <GenerateAudioButton
+                      label={a.url ? "Regenerate" : "Generate"}
+                      disabled={!(a.prompt ?? "").trim()}
+                      workflow={
+                        a.kind === "sfx"
+                          ? AUDIO_PRESETS.sfx(a.prompt ?? a.name, 3)
+                          : AUDIO_PRESETS.music(a.prompt ?? a.name, 20)
+                      }
+                      onDone={(url) =>
+                        updateAsset(projectId, a.id, { url, source: "generated" })
+                      }
+                    />
+                    {a.url && (
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        onClick={() => new Audio(a.url!).play()}
+                        title="Preview"
+                      >
+                        <Play className="h-3 w-3" />
+                      </Button>
+                    )}
+                  </div>
+                )}
+                {a.kind === "voice" && (
+                  <div className="flex items-center gap-2">
+                    <GenerateVoiceButton
+                      text={a.prompt ?? ""}
+                      onDone={(url) =>
+                        updateAsset(projectId, a.id, { url, source: "generated" })
+                      }
+                      disabled={!(a.prompt ?? "").trim()}
+                    />
+                    {a.url && (
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        onClick={() => new Audio(a.url!).play()}
+                        title="Preview"
+                      >
+                        <Play className="h-3 w-3" />
+                      </Button>
+                    )}
+                  </div>
                 )}
               </CardContent>
             </Card>
