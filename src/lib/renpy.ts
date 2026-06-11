@@ -195,3 +195,43 @@ export function buildRenpyProject(project: Project): Record<string, string> {
     ].join("\n"),
   };
 }
+
+/**
+ * Build the asset download manifest. Pairs of remote URL → destination
+ * relative path inside the Ren'Py project. blob: URLs are resolved by the
+ * caller before reaching Electron (see bridge.exportRenpy).
+ */
+export interface AssetDownload {
+  url: string;
+  dest: string;
+}
+export function buildAssetManifest(project: Project): AssetDownload[] {
+  const out: AssetDownload[] = [];
+  for (const a of project.assets) {
+    if (!a.url) continue;
+    if (a.kind === "background") out.push({ url: a.url, dest: `game/images/bg/${slug(a.name)}.png` });
+    else if (a.kind === "cg") out.push({ url: a.url, dest: `game/images/cg/${slug(a.name)}.png` });
+    else if (a.kind === "sprite") out.push({ url: a.url, dest: `game/images/sprites/${slug(a.name)}.png` });
+    else if (a.kind === "music") out.push({ url: a.url, dest: `game/audio/music/${slug(a.name)}.wav` });
+    else if (a.kind === "sfx") out.push({ url: a.url, dest: `game/audio/sfx/${slug(a.name)}.wav` });
+    else if (a.kind === "voice") out.push({ url: a.url, dest: `game/audio/voice/${slug(a.name)}.wav` });
+  }
+  for (const c of project.characters) {
+    if (c.portraitUrl) {
+      out.push({ url: c.portraitUrl, dest: `game/images/${slug(c.name)}/neutral.png` });
+    }
+    for (const e of c.expressions) {
+      if (e.url) {
+        out.push({ url: e.url, dest: `game/images/${slug(c.name)}/${slug(e.name)}.png` });
+      }
+    }
+  }
+  for (const s of project.scenes) {
+    for (const l of s.lines) {
+      if (l.voiceUrl) {
+        out.push({ url: l.voiceUrl, dest: `game/audio/voice/${l.id}.wav` });
+      }
+    }
+  }
+  return out;
+}
