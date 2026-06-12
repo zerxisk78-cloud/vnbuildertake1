@@ -183,6 +183,7 @@ function CharactersPage() {
                       });
                       toast.success(`Saved portrait for ${c.name}`);
                     }}
+                  />
                   <Button
                     size="sm"
                     variant="outline"
