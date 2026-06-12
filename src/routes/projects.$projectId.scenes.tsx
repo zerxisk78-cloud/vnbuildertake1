@@ -18,8 +18,11 @@ import { useStore } from "@/lib/store";
 import type { LineType, ScriptLine, Scene } from "@/lib/types";
 import { renderSceneRpy } from "@/lib/renpy";
 import { GenerateAudioButton } from "@/components/GenerateAudioButton";
+import { GenerateImageButton } from "@/components/GenerateImageButton";
 import { GenerateVoiceButton } from "@/components/GenerateVoiceButton";
 import { AUDIO_PRESETS } from "@/lib/audio-workflows";
+import { PRESETS } from "@/lib/workflows";
+import { composeCgPrompt } from "@/lib/cg-compose";
 
 export const Route = createFileRoute("/projects/$projectId/scenes")({
   component: ScenesPage,
