@@ -16,14 +16,24 @@ Electron desktop app (the portable `.zip` you actually use day-to-day).
    bun add -d electron @electron/packager cross-env
    ```
 
-## Build the portable .exe
+## Build the portable .zip (recommended)
+
+```bat
+bun run package:portable
+```
+
+The result lands in `dist-electron\VNStudio-Portable-win-x64.zip`. Unzip
+anywhere and double-click **`Start VN Studio.bat`** (or `VNStudio.exe`).
+The first launch shows a wizard that scans for Ollama / ComfyUI / XTTS /
+Ren'Py and links the install pages for any that are missing.
+
+## Build the raw .exe folder (advanced)
 
 ```bat
 bun run electron:package
 ```
 
-The result lands in `electron-release\VNBuilderStudio-win32-x64\` —
-that whole folder is the app. Zip it, move it, run `VNBuilderStudio.exe`.
+The result lands in `electron-release\VNBuilderStudio-win32-x64\`.
 
 The first run creates a `data\` folder next to the .exe holding your
 projects (`data\projects\<id>\project.json`) and settings
