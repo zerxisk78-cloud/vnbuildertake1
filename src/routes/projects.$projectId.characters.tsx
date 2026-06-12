@@ -1,6 +1,6 @@
 import { createFileRoute, useParams } from "@tanstack/react-router";
 import { useState } from "react";
-import { Plus, Trash2 } from "lucide-react";
+import { Loader2, Plus, Trash2, Wand2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -9,6 +9,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { useStore } from "@/lib/store";
 import { GenerateImageButton } from "@/components/GenerateImageButton";
 import { PRESETS } from "@/lib/workflows";
+import { EXPRESSION_PRESETS } from "@/lib/expression-presets";
+import { runWorkflow } from "@/lib/comfy";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/projects/$projectId/characters")({
@@ -23,7 +25,52 @@ function CharactersPage() {
   const updateCharacter = useStore((s) => s.updateCharacter);
   const deleteCharacter = useStore((s) => s.deleteCharacter);
   const addAsset = useStore((s) => s.addAsset);
+  const comfyUrl = useStore((s) => s.settings.comfy.url);
   const [name, setName] = useState("");
+  const [batching, setBatching] = useState<string | null>(null);
+  const [batchMsg, setBatchMsg] = useState("");
+
+  async function batchExpressions(charId: string) {
+    const c = project.characters.find((x) => x.id === charId);
+    if (!c || !checkpoint) return;
+    const base = c.portraitPrompt ?? c.name;
+    const seed = Math.floor(Math.random() * 2_147_483_647);
+    setBatching(charId);
+    try {
+      const next: { name: string; url?: string; prompt?: string }[] = [];
+      for (let i = 0; i < EXPRESSION_PRESETS.length; i++) {
+        const e = EXPRESSION_PRESETS[i];
+        setBatchMsg(`${i + 1} / ${EXPRESSION_PRESETS.length} · ${e.name}`);
+        try {
+          const wf = PRESETS.characterExpression(checkpoint, base, e.suffix, seed);
+          const images = await runWorkflow({ url: comfyUrl, workflow: wf });
+          const url = images[0]?.url;
+          next.push({ name: e.name, url, prompt: `${base}, ${e.suffix}` });
+          if (url) {
+            await addAsset(projectId, {
+              kind: "sprite",
+              name: `${c.name}_${e.name}`,
+              source: "generated",
+              url,
+              prompt: `${base}, ${e.suffix}`,
+              seed,
+              workflow: "characterExpression",
+            });
+          }
+        } catch (err) {
+          toast.error(`${e.name}: ${(err as Error).message}`);
+          next.push({ name: e.name });
+        }
+      }
+      await updateCharacter(projectId, charId, { expressions: next });
+      toast.success(
+        `Generated ${next.filter((x) => x.url).length} / ${EXPRESSION_PRESETS.length} expressions for ${c.name}`,
+      );
+    } finally {
+      setBatching(null);
+      setBatchMsg("");
+    }
+  }
 
   return (
     <div className="space-y-4 overflow-y-auto p-6">
@@ -122,10 +169,7 @@ function CharactersPage() {
                   <GenerateImageButton
                     label="Generate portrait"
                     disabled={!checkpoint || !(c.portraitPrompt ?? "").trim()}
-                    workflow={PRESETS.characterPortrait(
-                      checkpoint,
-                      c.portraitPrompt ?? c.name,
-                    )}
+                    workflow={PRESETS.characterPortrait(checkpoint, c.portraitPrompt ?? c.name)}
                     onDone={async (url) => {
                       await updateCharacter(projectId, c.id, { portraitUrl: url });
                       await addAsset(projectId, {
@@ -139,7 +183,37 @@ function CharactersPage() {
                       toast.success(`Saved portrait for ${c.name}`);
                     }}
                   />
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    disabled={!checkpoint || batching === c.id}
+                    onClick={() => batchExpressions(c.id)}
+                    title="Generate the full Ren'Py expression set with a shared seed for consistent face identity"
+                  >
+                    {batching === c.id ? (
+                      <Loader2 className="mr-1 h-4 w-4 animate-spin" />
+                    ) : (
+                      <Wand2 className="mr-1 h-4 w-4" />
+                    )}
+                    {batching === c.id ? batchMsg || "Working…" : "Batch expressions"}
+                  </Button>
                 </div>
+                {c.expressions.some((e) => e.url) && (
+                  <div className="flex flex-wrap gap-2">
+                    {c.expressions
+                      .filter((e) => e.url)
+                      .map((e) => (
+                        <div key={e.name} className="text-center">
+                          <img
+                            src={e.url}
+                            alt={e.name}
+                            className="h-20 w-16 rounded border border-border object-cover"
+                          />
+                          <div className="mt-1 text-[10px] text-muted-foreground">{e.name}</div>
+                        </div>
+                      ))}
+                  </div>
+                )}
                 {!checkpoint && (
                   <p className="text-xs text-muted-foreground">
                     Pick an SDXL checkpoint in Settings to enable generation.

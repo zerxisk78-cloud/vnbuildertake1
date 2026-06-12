@@ -13,7 +13,9 @@
     "format": "prettier --write .",
     "electron:build": "cross-env ELECTRON_BUILD=1 vite build",
     "electron:dev": "electron .",
-    "electron:package": "cross-env ELECTRON_BUILD=1 vite build && electron-packager . VNBuilderStudio --platform=win32 --arch=x64 --out=electron-release --overwrite --ignore=node_modules --ignore=^/src --ignore=^/electron-release --ignore=^/public --ignore=^/.lovable"
+    "electron:package": "cross-env ELECTRON_BUILD=1 vite build && electron-packager . VNBuilderStudio --platform=win32 --arch=x64 --out=electron-release --overwrite --ignore=node_modules --ignore=^/src --ignore=^/electron-release --ignore=^/public --ignore=^/.lovable",
+    "package:portable": "node scripts/package-portable.cjs",
+    "verify": "node scripts/verify/verify-all.cjs"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",
@@ -48,6 +50,7 @@
     "@tanstack/react-router": "^1.168.25",
     "@tanstack/react-start": "^1.167.50",
     "@tanstack/router-plugin": "^1.167.28",
+    "@xyflow/react": "^12.11.0",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "cmdk": "^1.1.1",

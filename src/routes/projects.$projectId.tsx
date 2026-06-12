@@ -1,6 +1,6 @@
 import { createFileRoute, Link, Outlet, useLocation, useParams } from "@tanstack/react-router";
 import { useEffect } from "react";
-import { ArrowLeft, Bot, BookOpen, Download, Image, Layers, Sparkles, Users } from "lucide-react";
+import { ArrowLeft, Bot, BookOpen, Download, GitBranch, Image, Layers, Sparkles, Users } from "lucide-react";
 import { AppShell } from "@/components/AppShell";
 import { Button } from "@/components/ui/button";
 import { useStore } from "@/lib/store";
@@ -16,6 +16,7 @@ export const Route = createFileRoute("/projects/$projectId")({
 const tabs = [
   { to: "overview", label: "Overview", Icon: Layers },
   { to: "scenes", label: "Scenes", Icon: Sparkles },
+  { to: "graph", label: "Graph", Icon: GitBranch },
   { to: "characters", label: "Characters", Icon: Users },
   { to: "lorebook", label: "Lorebook", Icon: BookOpen },
   { to: "assets", label: "Assets", Icon: Image },
