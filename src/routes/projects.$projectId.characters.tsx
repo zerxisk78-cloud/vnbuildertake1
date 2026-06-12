@@ -1,6 +1,6 @@
 import { createFileRoute, useParams } from "@tanstack/react-router";
 import { useState } from "react";
-import { Plus, Trash2 } from "lucide-react";
+import { Loader2, Plus, Trash2, Wand2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -9,6 +9,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { useStore } from "@/lib/store";
 import { GenerateImageButton } from "@/components/GenerateImageButton";
 import { PRESETS } from "@/lib/workflows";
+import { EXPRESSION_PRESETS } from "@/lib/expression-presets";
+import { runWorkflow } from "@/lib/comfy";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/projects/$projectId/characters")({
