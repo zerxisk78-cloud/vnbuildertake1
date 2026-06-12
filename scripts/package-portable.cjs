@@ -81,10 +81,7 @@ if (isWin) {
     `Compress-Archive -Path '${PACKAGED_DIR}' -DestinationPath '${zipPath}'`,
   ]);
 } else {
-  run("bash", [
-    "-c",
-    `cd '${OUT_DIR}' && zip -r '${zipName}' '${path.basename(PACKAGED_DIR)}'`,
-  ]);
+  run("bash", ["-c", `cd '${OUT_DIR}' && zip -r '${zipName}' '${path.basename(PACKAGED_DIR)}'`]);
 }
 
 console.log(`\n[package-portable] done → ${zipPath}`);

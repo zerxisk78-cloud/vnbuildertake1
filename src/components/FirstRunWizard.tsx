@@ -64,8 +64,8 @@ export function FirstRunWizard() {
         <DialogHeader>
           <DialogTitle>Welcome to VN Builder Studio</DialogTitle>
           <DialogDescription>
-            Quick check for the local tools this app uses. Nothing is installed
-            automatically — links open the official download pages.
+            Quick check for the local tools this app uses. Nothing is installed automatically —
+            links open the official download pages.
           </DialogDescription>
         </DialogHeader>
         <div className="space-y-2">

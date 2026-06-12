@@ -63,7 +63,9 @@ function CharactersPage() {
         }
       }
       await updateCharacter(projectId, charId, { expressions: next });
-      toast.success(`Generated ${next.filter((x) => x.url).length} / ${EXPRESSION_PRESETS.length} expressions for ${c.name}`);
+      toast.success(
+        `Generated ${next.filter((x) => x.url).length} / ${EXPRESSION_PRESETS.length} expressions for ${c.name}`,
+      );
     } finally {
       setBatching(null);
       setBatchMsg("");
@@ -167,10 +169,7 @@ function CharactersPage() {
                   <GenerateImageButton
                     label="Generate portrait"
                     disabled={!checkpoint || !(c.portraitPrompt ?? "").trim()}
-                    workflow={PRESETS.characterPortrait(
-                      checkpoint,
-                      c.portraitPrompt ?? c.name,
-                    )}
+                    workflow={PRESETS.characterPortrait(checkpoint, c.portraitPrompt ?? c.name)}
                     onDone={async (url) => {
                       await updateCharacter(projectId, c.id, { portraitUrl: url });
                       await addAsset(projectId, {

@@ -16,8 +16,8 @@ export interface WorkflowParams {
 }
 
 const DEFAULT_NEG =
-  "lowres, bad anatomy, bad hands, text, error, missing fingers, extra digit, "
-  + "fewer digits, cropped, worst quality, low quality, jpeg artifacts, watermark, signature";
+  "lowres, bad anatomy, bad hands, text, error, missing fingers, extra digit, " +
+  "fewer digits, cropped, worst quality, low quality, jpeg artifacts, watermark, signature";
 
 /** Standard SDXL txt2img workflow in ComfyUI API format. */
 export function sdxlTxt2Img(p: WorkflowParams): Record<string, unknown> {
@@ -71,9 +71,9 @@ export const PRESETS = {
     sdxlTxt2Img({
       checkpoint,
       positive:
-        "masterpiece, best quality, highly detailed, character portrait, "
-        + "upper body, looking at viewer, soft studio lighting, clean background, "
-        + prompt,
+        "masterpiece, best quality, highly detailed, character portrait, " +
+        "upper body, looking at viewer, soft studio lighting, clean background, " +
+        prompt,
       width: 832,
       height: 1216,
       seed,
@@ -82,9 +82,9 @@ export const PRESETS = {
     sdxlTxt2Img({
       checkpoint,
       positive:
-        "masterpiece, best quality, highly detailed background, cinematic lighting, "
-        + "no humans, scenery, wide establishing shot, "
-        + prompt,
+        "masterpiece, best quality, highly detailed background, cinematic lighting, " +
+        "no humans, scenery, wide establishing shot, " +
+        prompt,
       width: 1344,
       height: 768,
       seed,
@@ -93,9 +93,9 @@ export const PRESETS = {
     sdxlTxt2Img({
       checkpoint,
       positive:
-        "masterpiece, best quality, highly detailed, cinematic CG illustration, "
-        + "dramatic lighting, "
-        + prompt,
+        "masterpiece, best quality, highly detailed, cinematic CG illustration, " +
+        "dramatic lighting, " +
+        prompt,
       width: 1344,
       height: 768,
       seed,
@@ -114,11 +114,11 @@ export const PRESETS = {
     sdxlTxt2Img({
       checkpoint,
       positive:
-        "masterpiece, best quality, highly detailed, character portrait, "
-        + "upper body, looking at viewer, soft studio lighting, clean background, "
-        + basePrompt
-        + ", "
-        + expressionSuffix,
+        "masterpiece, best quality, highly detailed, character portrait, " +
+        "upper body, looking at viewer, soft studio lighting, clean background, " +
+        basePrompt +
+        ", " +
+        expressionSuffix,
       width: 832,
       height: 1216,
       seed,

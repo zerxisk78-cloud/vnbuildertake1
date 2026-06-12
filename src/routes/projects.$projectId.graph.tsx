@@ -1,13 +1,6 @@
 import { createFileRoute, useNavigate, useParams } from "@tanstack/react-router";
 import { useMemo } from "react";
-import {
-  Background,
-  Controls,
-  MiniMap,
-  ReactFlow,
-  type Edge,
-  type Node,
-} from "@xyflow/react";
+import { Background, Controls, MiniMap, ReactFlow, type Edge, type Node } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
 import { useStore } from "@/lib/store";
 import type { Scene } from "@/lib/types";

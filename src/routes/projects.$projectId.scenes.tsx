@@ -49,9 +49,7 @@ function ScenesPage() {
 
   const [expanded, setExpanded] = useState<Record<string, boolean>>({});
   const [newTitle, setNewTitle] = useState("");
-  const [selectedId, setSelectedId] = useState<string | null>(
-    project.scenes[0]?.id ?? null,
-  );
+  const [selectedId, setSelectedId] = useState<string | null>(project.scenes[0]?.id ?? null);
 
   const selected = project.scenes.find((s) => s.id === selectedId) ?? project.scenes[0];
 
@@ -174,16 +172,14 @@ function ScenesPage() {
                     disabled={!(selected.musicPrompt ?? "").trim()}
                     workflow={AUDIO_PRESETS.music(selected.musicPrompt ?? "", 20)}
                     onDone={async (url) => {
-                      const a = await useStore
-                        .getState()
-                        .addAsset(projectId, {
-                          kind: "music",
-                          name: `${selected.title}_music`,
-                          source: "generated",
-                          url,
-                          prompt: selected.musicPrompt,
-                          workflow: "musicGen",
-                        });
+                      const a = await useStore.getState().addAsset(projectId, {
+                        kind: "music",
+                        name: `${selected.title}_music`,
+                        source: "generated",
+                        url,
+                        prompt: selected.musicPrompt,
+                        workflow: "musicGen",
+                      });
                       await updateScene(projectId, selected.id, { music: a.id });
                     }}
                   />
@@ -200,11 +196,9 @@ function ScenesPage() {
                       <Play className="h-3 w-3" />
                     </Button>
                   )}
-            </div>
+                </div>
 
-            <CgGenerator projectId={projectId} scene={selected} />
-
-
+                <CgGenerator projectId={projectId} scene={selected} />
               </div>
             </div>
 
@@ -298,7 +292,12 @@ function LineList({ projectId, scene }: { projectId: string; scene: Scene }) {
             </span>
             <span>#{i + 1}</span>
             <div className="ml-auto flex gap-1">
-              <Button size="icon" variant="ghost" onClick={() => moveLine(i, -1)} disabled={i === 0}>
+              <Button
+                size="icon"
+                variant="ghost"
+                onClick={() => moveLine(i, -1)}
+                disabled={i === 0}
+              >
                 ↑
               </Button>
               <Button
@@ -472,7 +471,9 @@ function CgGenerator({ projectId, scene }: { projectId: string; scene: Scene }) 
   const cgAsset = project.assets.find((a) => a.kind === "cg" && a.name === `${scene.title}_cg`);
   return (
     <div className="mt-6 rounded-md border border-dashed border-border p-3">
-      <Label className="text-xs uppercase tracking-wider text-muted-foreground">CG illustration</Label>
+      <Label className="text-xs uppercase tracking-wider text-muted-foreground">
+        CG illustration
+      </Label>
       <Textarea
         className="mt-2"
         placeholder="Optional: describe the key moment (e.g. 'they share an umbrella in the rain')"
@@ -512,4 +513,3 @@ function CgGenerator({ projectId, scene }: { projectId: string; scene: Scene }) 
     </div>
   );
 }
-
