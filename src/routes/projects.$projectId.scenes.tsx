@@ -200,7 +200,11 @@ function ScenesPage() {
                       <Play className="h-3 w-3" />
                     </Button>
                   )}
-                </div>
+            </div>
+
+            <CgGenerator projectId={projectId} scene={selected} />
+
+
               </div>
             </div>
 
