@@ -462,3 +462,54 @@ function LineList({ projectId, scene }: { projectId: string; scene: Scene }) {
     </div>
   );
 }
+
+function CgGenerator({ projectId, scene }: { projectId: string; scene: Scene }) {
+  const project = useStore((s) => s.getProject(projectId))!;
+  const checkpoint = useStore((s) => s.settings.comfy.checkpoint);
+  const addAsset = useStore((s) => s.addAsset);
+  const [moment, setMoment] = useState("");
+  const prompt = composeCgPrompt({ project, scene, moment });
+  const cgAsset = project.assets.find((a) => a.kind === "cg" && a.name === `${scene.title}_cg`);
+  return (
+    <div className="mt-6 rounded-md border border-dashed border-border p-3">
+      <Label className="text-xs uppercase tracking-wider text-muted-foreground">CG illustration</Label>
+      <Textarea
+        className="mt-2"
+        placeholder="Optional: describe the key moment (e.g. 'they share an umbrella in the rain')"
+        value={moment}
+        onChange={(e) => setMoment(e.target.value)}
+      />
+      <div className="mt-2 text-xs text-muted-foreground">
+        Composed prompt: <span className="font-mono">{prompt}</span>
+      </div>
+      <div className="mt-2 flex items-center gap-2">
+        <GenerateImageButton
+          label={cgAsset ? "Regenerate CG" : "Generate CG"}
+          disabled={!checkpoint}
+          workflow={PRESETS.cg(checkpoint, prompt)}
+          onDone={async (url) => {
+            await addAsset(projectId, {
+              kind: "cg",
+              name: `${scene.title}_cg`,
+              source: "generated",
+              url,
+              prompt,
+              workflow: "cg",
+            });
+          }}
+        />
+        {!checkpoint && (
+          <span className="text-xs text-muted-foreground">Pick a checkpoint in Settings</span>
+        )}
+      </div>
+      {cgAsset?.url && (
+        <img
+          src={cgAsset.url}
+          alt="CG"
+          className="mt-2 max-h-64 rounded border border-border object-contain"
+        />
+      )}
+    </div>
+  );
+}
+
