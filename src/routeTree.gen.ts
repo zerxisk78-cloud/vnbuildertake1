@@ -16,6 +16,7 @@ import { Route as ProjectsProjectIdIndexRouteImport } from './routes/projects.$p
 import { Route as ProjectsProjectIdScenesRouteImport } from './routes/projects.$projectId.scenes'
 import { Route as ProjectsProjectIdOverviewRouteImport } from './routes/projects.$projectId.overview'
 import { Route as ProjectsProjectIdLorebookRouteImport } from './routes/projects.$projectId.lorebook'
+import { Route as ProjectsProjectIdGraphRouteImport } from './routes/projects.$projectId.graph'
 import { Route as ProjectsProjectIdCharactersRouteImport } from './routes/projects.$projectId.characters'
 import { Route as ProjectsProjectIdAssetsRouteImport } from './routes/projects.$projectId.assets'
 import { Route as ProjectsProjectIdAiRouteImport } from './routes/projects.$projectId.ai'
@@ -57,6 +58,11 @@ const ProjectsProjectIdLorebookRoute =
     path: '/lorebook',
     getParentRoute: () => ProjectsProjectIdRoute,
   } as any)
+const ProjectsProjectIdGraphRoute = ProjectsProjectIdGraphRouteImport.update({
+  id: '/graph',
+  path: '/graph',
+  getParentRoute: () => ProjectsProjectIdRoute,
+} as any)
 const ProjectsProjectIdCharactersRoute =
   ProjectsProjectIdCharactersRouteImport.update({
     id: '/characters',
@@ -81,6 +87,7 @@ export interface FileRoutesByFullPath {
   '/projects/$projectId/ai': typeof ProjectsProjectIdAiRoute
   '/projects/$projectId/assets': typeof ProjectsProjectIdAssetsRoute
   '/projects/$projectId/characters': typeof ProjectsProjectIdCharactersRoute
+  '/projects/$projectId/graph': typeof ProjectsProjectIdGraphRoute
   '/projects/$projectId/lorebook': typeof ProjectsProjectIdLorebookRoute
   '/projects/$projectId/overview': typeof ProjectsProjectIdOverviewRoute
   '/projects/$projectId/scenes': typeof ProjectsProjectIdScenesRoute
@@ -92,6 +99,7 @@ export interface FileRoutesByTo {
   '/projects/$projectId/ai': typeof ProjectsProjectIdAiRoute
   '/projects/$projectId/assets': typeof ProjectsProjectIdAssetsRoute
   '/projects/$projectId/characters': typeof ProjectsProjectIdCharactersRoute
+  '/projects/$projectId/graph': typeof ProjectsProjectIdGraphRoute
   '/projects/$projectId/lorebook': typeof ProjectsProjectIdLorebookRoute
   '/projects/$projectId/overview': typeof ProjectsProjectIdOverviewRoute
   '/projects/$projectId/scenes': typeof ProjectsProjectIdScenesRoute
@@ -105,6 +113,7 @@ export interface FileRoutesById {
   '/projects/$projectId/ai': typeof ProjectsProjectIdAiRoute
   '/projects/$projectId/assets': typeof ProjectsProjectIdAssetsRoute
   '/projects/$projectId/characters': typeof ProjectsProjectIdCharactersRoute
+  '/projects/$projectId/graph': typeof ProjectsProjectIdGraphRoute
   '/projects/$projectId/lorebook': typeof ProjectsProjectIdLorebookRoute
   '/projects/$projectId/overview': typeof ProjectsProjectIdOverviewRoute
   '/projects/$projectId/scenes': typeof ProjectsProjectIdScenesRoute
@@ -119,6 +128,7 @@ export interface FileRouteTypes {
     | '/projects/$projectId/ai'
     | '/projects/$projectId/assets'
     | '/projects/$projectId/characters'
+    | '/projects/$projectId/graph'
     | '/projects/$projectId/lorebook'
     | '/projects/$projectId/overview'
     | '/projects/$projectId/scenes'
@@ -130,6 +140,7 @@ export interface FileRouteTypes {
     | '/projects/$projectId/ai'
     | '/projects/$projectId/assets'
     | '/projects/$projectId/characters'
+    | '/projects/$projectId/graph'
     | '/projects/$projectId/lorebook'
     | '/projects/$projectId/overview'
     | '/projects/$projectId/scenes'
@@ -142,6 +153,7 @@ export interface FileRouteTypes {
     | '/projects/$projectId/ai'
     | '/projects/$projectId/assets'
     | '/projects/$projectId/characters'
+    | '/projects/$projectId/graph'
     | '/projects/$projectId/lorebook'
     | '/projects/$projectId/overview'
     | '/projects/$projectId/scenes'
@@ -205,6 +217,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ProjectsProjectIdLorebookRouteImport
       parentRoute: typeof ProjectsProjectIdRoute
     }
+    '/projects/$projectId/graph': {
+      id: '/projects/$projectId/graph'
+      path: '/graph'
+      fullPath: '/projects/$projectId/graph'
+      preLoaderRoute: typeof ProjectsProjectIdGraphRouteImport
+      parentRoute: typeof ProjectsProjectIdRoute
+    }
     '/projects/$projectId/characters': {
       id: '/projects/$projectId/characters'
       path: '/characters'
@@ -233,6 +252,7 @@ interface ProjectsProjectIdRouteChildren {
   ProjectsProjectIdAiRoute: typeof ProjectsProjectIdAiRoute
   ProjectsProjectIdAssetsRoute: typeof ProjectsProjectIdAssetsRoute
   ProjectsProjectIdCharactersRoute: typeof ProjectsProjectIdCharactersRoute
+  ProjectsProjectIdGraphRoute: typeof ProjectsProjectIdGraphRoute
   ProjectsProjectIdLorebookRoute: typeof ProjectsProjectIdLorebookRoute
   ProjectsProjectIdOverviewRoute: typeof ProjectsProjectIdOverviewRoute
   ProjectsProjectIdScenesRoute: typeof ProjectsProjectIdScenesRoute
@@ -243,6 +263,7 @@ const ProjectsProjectIdRouteChildren: ProjectsProjectIdRouteChildren = {
   ProjectsProjectIdAiRoute: ProjectsProjectIdAiRoute,
   ProjectsProjectIdAssetsRoute: ProjectsProjectIdAssetsRoute,
   ProjectsProjectIdCharactersRoute: ProjectsProjectIdCharactersRoute,
+  ProjectsProjectIdGraphRoute: ProjectsProjectIdGraphRoute,
   ProjectsProjectIdLorebookRoute: ProjectsProjectIdLorebookRoute,
   ProjectsProjectIdOverviewRoute: ProjectsProjectIdOverviewRoute,
   ProjectsProjectIdScenesRoute: ProjectsProjectIdScenesRoute,
@@ -260,3 +281,13 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
