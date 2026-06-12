@@ -183,8 +183,37 @@ function CharactersPage() {
                       });
                       toast.success(`Saved portrait for ${c.name}`);
                     }}
-                  />
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    disabled={!checkpoint || batching === c.id}
+                    onClick={() => batchExpressions(c.id)}
+                    title="Generate the full Ren'Py expression set with a shared seed for consistent face identity"
+                  >
+                    {batching === c.id ? (
+                      <Loader2 className="mr-1 h-4 w-4 animate-spin" />
+                    ) : (
+                      <Wand2 className="mr-1 h-4 w-4" />
+                    )}
+                    {batching === c.id ? batchMsg || "Working…" : "Batch expressions"}
+                  </Button>
                 </div>
+                {c.expressions.some((e) => e.url) && (
+                  <div className="flex flex-wrap gap-2">
+                    {c.expressions
+                      .filter((e) => e.url)
+                      .map((e) => (
+                        <div key={e.name} className="text-center">
+                          <img
+                            src={e.url}
+                            alt={e.name}
+                            className="h-20 w-16 rounded border border-border object-cover"
+                          />
+                          <div className="mt-1 text-[10px] text-muted-foreground">{e.name}</div>
+                        </div>
+                      ))}
+                  </div>
+                )}
                 {!checkpoint && (
                   <p className="text-xs text-muted-foreground">
                     Pick an SDXL checkpoint in Settings to enable generation.
