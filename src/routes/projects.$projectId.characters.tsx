@@ -25,7 +25,50 @@ function CharactersPage() {
   const updateCharacter = useStore((s) => s.updateCharacter);
   const deleteCharacter = useStore((s) => s.deleteCharacter);
   const addAsset = useStore((s) => s.addAsset);
+  const comfyUrl = useStore((s) => s.settings.comfy.url);
   const [name, setName] = useState("");
+  const [batching, setBatching] = useState<string | null>(null);
+  const [batchMsg, setBatchMsg] = useState("");
+
+  async function batchExpressions(charId: string) {
+    const c = project.characters.find((x) => x.id === charId);
+    if (!c || !checkpoint) return;
+    const base = c.portraitPrompt ?? c.name;
+    const seed = Math.floor(Math.random() * 2_147_483_647);
+    setBatching(charId);
+    try {
+      const next: { name: string; url?: string; prompt?: string }[] = [];
+      for (let i = 0; i < EXPRESSION_PRESETS.length; i++) {
+        const e = EXPRESSION_PRESETS[i];
+        setBatchMsg(`${i + 1} / ${EXPRESSION_PRESETS.length} · ${e.name}`);
+        try {
+          const wf = PRESETS.characterExpression(checkpoint, base, e.suffix, seed);
+          const images = await runWorkflow({ url: comfyUrl, workflow: wf });
+          const url = images[0]?.url;
+          next.push({ name: e.name, url, prompt: `${base}, ${e.suffix}` });
+          if (url) {
+            await addAsset(projectId, {
+              kind: "sprite",
+              name: `${c.name}_${e.name}`,
+              source: "generated",
+              url,
+              prompt: `${base}, ${e.suffix}`,
+              seed,
+              workflow: "characterExpression",
+            });
+          }
+        } catch (err) {
+          toast.error(`${e.name}: ${(err as Error).message}`);
+          next.push({ name: e.name });
+        }
+      }
+      await updateCharacter(projectId, charId, { expressions: next });
+      toast.success(`Generated ${next.filter((x) => x.url).length} / ${EXPRESSION_PRESETS.length} expressions for ${c.name}`);
+    } finally {
+      setBatching(null);
+      setBatchMsg("");
+    }
+  }
 
   return (
     <div className="space-y-4 overflow-y-auto p-6">
