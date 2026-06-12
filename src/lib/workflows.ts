@@ -100,4 +100,27 @@ export const PRESETS = {
       height: 768,
       seed,
     }),
+  /**
+   * Character expression variant. Re-uses the character's base portrait prompt
+   * and appends the expression suffix. Pass the same `seed` across all
+   * expressions for the same character to keep face identity consistent.
+   */
+  characterExpression: (
+    checkpoint: string,
+    basePrompt: string,
+    expressionSuffix: string,
+    seed: number,
+  ) =>
+    sdxlTxt2Img({
+      checkpoint,
+      positive:
+        "masterpiece, best quality, highly detailed, character portrait, "
+        + "upper body, looking at viewer, soft studio lighting, clean background, "
+        + basePrompt
+        + ", "
+        + expressionSuffix,
+      width: 832,
+      height: 1216,
+      seed,
+    }),
 };
