@@ -258,21 +258,62 @@ ipcMain.handle("renpy:launch", (_e, projectDir) => {
 ipcMain.handle("shell:openPath", (_e, p) => shell.openPath(p));
 
 // ----- Window -----
+const APP_TITLE = "VN Builder Studio";
+const ICON_PATH = path.join(__dirname, "..", "build", "icon.png");
+
+function createSplash() {
+  const splash = new BrowserWindow({
+    width: 420,
+    height: 260,
+    frame: false,
+    resizable: false,
+    transparent: false,
+    backgroundColor: "#0b0f17",
+    alwaysOnTop: true,
+    show: true,
+    icon: fs.existsSync(ICON_PATH) ? ICON_PATH : undefined,
+  });
+  const iconUrl = fs.existsSync(ICON_PATH)
+    ? "file://" + ICON_PATH.replace(/\\/g, "/")
+    : "";
+  splash.loadURL(
+    "data:text/html;charset=utf-8," +
+      encodeURIComponent(`<!doctype html><html><body style="margin:0;background:#0b0f17;color:#e2e8f0;font:14px system-ui;display:flex;flex-direction:column;align-items:center;justify-content:center;height:100vh;gap:14px;border:1px solid #1e293b;">${iconUrl ? `<img src="${iconUrl}" style="width:96px;height:96px;border-radius:18px;box-shadow:0 8px 32px rgba(99,102,241,.35)"/>` : ""}<div style="font-size:18px;font-weight:600;letter-spacing:.5px">VN Builder Studio</div><div style="opacity:.6;font-size:12px">Loading…</div></body></html>`),
+  );
+  return splash;
+}
+
 function createWindow() {
+  const splash = createSplash();
   const win = new BrowserWindow({
     width: 1400,
     height: 900,
+    title: APP_TITLE,
+    show: false,
     backgroundColor: "#0b0f17",
     autoHideMenuBar: true,
+    icon: fs.existsSync(ICON_PATH) ? ICON_PATH : undefined,
     webPreferences: {
       preload: path.join(__dirname, "preload.cjs"),
       contextIsolation: true,
       nodeIntegration: false,
     },
   });
+  win.setTitle(APP_TITLE);
+  win.on("page-title-updated", (e) => e.preventDefault());
   const indexHtml = path.join(__dirname, "..", "dist", "index.html");
   win.loadFile(indexHtml);
+  win.once("ready-to-show", () => {
+    try {
+      splash.close();
+    } catch {
+      /* noop */
+    }
+    win.show();
+  });
 }
+
+app.setName(APP_TITLE);
 
 app.whenReady().then(() => {
   ensureDirs();
