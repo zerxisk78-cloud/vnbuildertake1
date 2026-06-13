@@ -1,6 +1,6 @@
 import { createFileRoute, useParams } from "@tanstack/react-router";
 import { useState } from "react";
-import { Hammer, Download, Play, Loader2 } from "lucide-react";
+import { Hammer, Download, Play, Loader2, FolderOpen } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useStore } from "@/lib/store";
@@ -136,9 +136,16 @@ function Overview() {
             </p>
           )}
           {lastDir && (
-            <p className="text-xs text-muted-foreground">
-              Last export: <code>{lastDir}</code>
-            </p>
+            <div className="flex items-center gap-2">
+              <p className="text-xs text-muted-foreground">
+                Last export: <code>{lastDir}</code>
+              </p>
+              {isElectron() && (
+                <Button size="sm" variant="ghost" onClick={() => bridge.openPath(lastDir)}>
+                  <FolderOpen className="mr-1 h-3 w-3" /> Open folder
+                </Button>
+              )}
+            </div>
           )}
         </CardContent>
       </Card>

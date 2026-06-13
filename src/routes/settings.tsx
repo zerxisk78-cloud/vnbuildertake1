@@ -435,8 +435,86 @@ function SettingsPage() {
               </Button>
             </CardContent>
           </Card>
+
+          {/* RECOMMENDED MODELS */}
+          <Card className="md:col-span-2">
+            <CardHeader>
+              <CardTitle className="text-base">Recommended models (one-click download links)</CardTitle>
+            </CardHeader>
+            <CardContent className="grid gap-3 md:grid-cols-2">
+              {RECOMMENDED_MODELS.map((m) => (
+                <div
+                  key={m.url}
+                  className="flex items-start justify-between gap-3 rounded-md border border-border p-3"
+                >
+                  <div className="min-w-0">
+                    <div className="text-sm font-medium">{m.label}</div>
+                    <div className="text-xs text-muted-foreground">
+                      {m.kind} · {m.size} · place in <code>{m.dest}</code>
+                    </div>
+                  </div>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => bridge.openExternal(m.url)}
+                  >
+                    Download <ExternalLink className="ml-1 h-3 w-3" />
+                  </Button>
+                </div>
+              ))}
+              <p className="text-xs text-muted-foreground md:col-span-2">
+                Models are not bundled with the app — licensing requires you to download them yourself
+                from the official sources above.
+              </p>
+            </CardContent>
+          </Card>
         </div>
       </div>
     </AppShell>
   );
 }
+
+const RECOMMENDED_MODELS: { label: string; kind: string; size: string; dest: string; url: string }[] = [
+  {
+    label: "SDXL Base 1.0 (image generation)",
+    kind: "Checkpoint",
+    size: "~6.9 GB",
+    dest: "ComfyUI/models/checkpoints/",
+    url: "https://huggingface.co/stabilityai/stable-diffusion-xl-base-1.0/resolve/main/sd_xl_base_1.0.safetensors",
+  },
+  {
+    label: "SDXL Refiner 1.0 (optional)",
+    kind: "Checkpoint",
+    size: "~6.1 GB",
+    dest: "ComfyUI/models/checkpoints/",
+    url: "https://huggingface.co/stabilityai/stable-diffusion-xl-refiner-1.0/resolve/main/sd_xl_refiner_1.0.safetensors",
+  },
+  {
+    label: "FLUX.1 [dev] (high-quality alt)",
+    kind: "Checkpoint",
+    size: "~24 GB",
+    dest: "ComfyUI/models/unet/",
+    url: "https://huggingface.co/black-forest-labs/FLUX.1-dev",
+  },
+  {
+    label: "Stable Audio Open 1.0 (music/SFX)",
+    kind: "Audio model",
+    size: "~5 GB",
+    dest: "ComfyUI/models/audio_checkpoints/",
+    url: "https://huggingface.co/stabilityai/stable-audio-open-1.0",
+  },
+  {
+    label: "XTTS v2 (voice cloning)",
+    kind: "TTS",
+    size: "~1.8 GB",
+    dest: "xtts-api-server/models/",
+    url: "https://huggingface.co/coqui/XTTS-v2",
+  },
+  {
+    label: "Llama 3.1 8B Instruct (Ollama)",
+    kind: "LLM",
+    size: "~4.7 GB",
+    dest: "ollama pull llama3.1:8b",
+    url: "https://ollama.com/library/llama3.1",
+  },
+];

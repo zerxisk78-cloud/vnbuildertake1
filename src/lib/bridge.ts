@@ -136,6 +136,10 @@ export const bridge = {
     window.open(url, "_blank", "noopener,noreferrer");
   },
 
+  async openPath(p: string): Promise<void> {
+    if (isElectron()) return window.lovableApi!.openPath(p);
+  },
+
   async spawnService(name: "comfy" | "xtts" | "ollama") {
     if (isElectron()) return window.lovableApi!.spawnService(name);
     return { ok: false, error: "Desktop app only" };

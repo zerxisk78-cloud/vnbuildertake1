@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { CheckCircle2, ExternalLink, Loader2, RefreshCw, XCircle } from "lucide-react";
+import { CheckCircle2, ExternalLink, Loader2, RefreshCw, Sparkles, XCircle } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -10,6 +10,8 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { bridge } from "@/lib/bridge";
+import { useStore } from "@/lib/store";
+import { toast } from "sonner";
 import type { DepReport } from "@/lib/types";
 
 const FLAG = "vnstudio:firstRun";
@@ -34,6 +36,8 @@ export function FirstRunWizard() {
   const [open, setOpen] = useState(false);
   const [reports, setReports] = useState<Record<string, DepReport> | null>(null);
   const [scanning, setScanning] = useState(false);
+  const createExampleProject = useStore((s) => s.createExampleProject);
+  const projects = useStore((s) => s.projects);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -110,7 +114,19 @@ export function FirstRunWizard() {
             })
           )}
         </div>
-        <DialogFooter className="gap-2 sm:gap-2">
+        <DialogFooter className="flex-col gap-2 sm:flex-row sm:gap-2">
+          {projects.length === 0 && (
+            <Button
+              variant="secondary"
+              onClick={async () => {
+                await createExampleProject();
+                toast.success("Example project loaded — open it from the home page.");
+                done();
+              }}
+            >
+              <Sparkles className="mr-1 h-3 w-3" /> Load example VN
+            </Button>
+          )}
           <Button variant="ghost" onClick={scan} disabled={scanning}>
             <RefreshCw className={"mr-1 h-3 w-3 " + (scanning ? "animate-spin" : "")} />
             Re-scan

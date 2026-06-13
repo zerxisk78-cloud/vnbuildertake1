@@ -3,6 +3,7 @@ import { nanoid } from "nanoid";
 import { bridge } from "./bridge";
 import type { Project, Settings, Scene, Character, LoreEntry, Asset } from "./types";
 import { DEFAULT_SETTINGS } from "./types";
+import { buildExampleProject } from "./example-project";
 
 interface StoreState {
   projects: Project[];
@@ -13,6 +14,7 @@ interface StoreState {
   saveSettings(s: Partial<Settings>): Promise<void>;
 
   createProject(name: string, genre: Project["genre"], description: string): Promise<Project>;
+  createExampleProject(): Promise<Project>;
   duplicateProject(id: string): Promise<Project | null>;
   deleteProject(id: string): Promise<void>;
   updateProject(id: string, patch: Partial<Project>): Promise<void>;
@@ -80,6 +82,13 @@ export const useStore = create<StoreState>((set, get) => ({
       lorebook: [],
       assets: [],
     };
+    await persist(project);
+    set({ projects: [...get().projects, project] });
+    return project;
+  },
+
+  async createExampleProject() {
+    const project = buildExampleProject();
     await persist(project);
     set({ projects: [...get().projects, project] });
     return project;
