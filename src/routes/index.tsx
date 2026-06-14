@@ -165,6 +165,7 @@ function Index() {
               </DialogFooter>
             </DialogContent>
           </Dialog>
+          </div>
         </div>
 
         {projects.length === 0 ? (
