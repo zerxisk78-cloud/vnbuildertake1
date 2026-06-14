@@ -149,7 +149,9 @@ ipcMain.handle("service:spawn", async (_e, name) => {
   }
   if (name === "ollama") {
     if (await probePort(11434)) return { ok: true };
-    const child = spawn("ollama", ["serve"], { shell: true });
+    // Avoid shell:true + args (Node DEP0190). Spawn directly; fall back to .exe on win.
+    const bin = process.platform === "win32" ? "ollama.exe" : "ollama";
+    const child = spawn(bin, ["serve"], { shell: false });
     managed.set("ollama", child);
     return { ok: true };
   }
