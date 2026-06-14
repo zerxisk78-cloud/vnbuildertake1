@@ -38,12 +38,21 @@ export const Route = createFileRoute("/")({
 });
 
 function Index() {
-  const { projects, loaded, load, createProject, deleteProject, duplicateProject } = useStore();
+  const {
+    projects,
+    loaded,
+    load,
+    createProject,
+    deleteProject,
+    duplicateProject,
+    importRenpyFromFolder,
+  } = useStore();
   const navigate = useNavigate();
   const [open, setOpen] = useState(false);
   const [name, setName] = useState("");
   const [genre, setGenre] = useState<Genre>("Visual Novel");
   const [desc, setDesc] = useState("");
+  const [importing, setImporting] = useState(false);
 
   useEffect(() => {
     if (!loaded) void load();
@@ -57,6 +66,35 @@ function Index() {
     setDesc("");
     toast.success("Project created");
     navigate({ to: "/projects/$projectId/scenes", params: { projectId: p.id } });
+  }
+
+  async function importRenpy() {
+    if (!isElectron()) {
+      toast.error("Import is only available in the desktop app.");
+      return;
+    }
+    const folder = await bridge.pickFolder("Pick a Ren'Py project (the folder containing game/)");
+    if (!folder) return;
+    setImporting(true);
+    try {
+      const result = await importRenpyFromFolder(folder);
+      if ("error" in result) {
+        toast.error(result.error);
+        return;
+      }
+      const warnings = result.log.filter((l) => l.level === "warn").length;
+      toast.success(
+        `Imported "${result.project.name}" — ${result.project.scenes.length} scenes, ${result.project.characters.length} chars${warnings ? `, ${warnings} warning(s)` : ""}`,
+      );
+      navigate({
+        to: "/projects/$projectId/scenes",
+        params: { projectId: result.project.id },
+      });
+    } catch (e) {
+      toast.error(`Import failed: ${(e as Error).message}`);
+    } finally {
+      setImporting(false);
+    }
   }
 
   return (
