@@ -1,6 +1,6 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { BookOpenText, Copy, Plus, Trash2 } from "lucide-react";
+import { BookOpenText, Copy, FolderInput, Plus, Trash2 } from "lucide-react";
 import { AppShell } from "@/components/AppShell";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -23,6 +23,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useStore } from "@/lib/store";
+import { bridge, isElectron } from "@/lib/bridge";
 import { GENRES, type Genre } from "@/lib/types";
 import { toast } from "sonner";
 
