@@ -211,6 +211,22 @@ export const bridge = {
     if (!isElectron()) return { ok: false, error: "Desktop app only" };
     return window.lovableApi!.launchRenpy(projectDir);
   },
+
+  /** Scan a Ren'Py project folder. Returns raw .rpy text + asset listing for
+   *  the importer to consume. Desktop only. */
+  async importRenpyScan(folderPath: string) {
+    if (!isElectron()) return { error: "Desktop app only" } as const;
+    return window.lovableApi!.importRenpyScan(folderPath);
+  },
+
+  /** Turn an absolute on-disk path into a URL the renderer can load via
+   *  the app:// custom protocol. Falls back to file:// in the web preview. */
+  localAssetUrl(absPath: string): string {
+    if (isElectron()) {
+      return `app://localhost/local-asset?p=${encodeURIComponent(absPath)}`;
+    }
+    return `file://${absPath}`;
+  },
 };
 
 async function probeOllama(): Promise<DepReport> {
