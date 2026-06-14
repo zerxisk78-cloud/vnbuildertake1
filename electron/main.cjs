@@ -429,6 +429,22 @@ function registerAppProtocol() {
   protocol.handle("app", async (request) => {
     try {
       const url = new URL(request.url);
+
+      // 0. Local-asset passthrough: serves any absolute file path on disk so
+      //    imported Ren'Py images/audio render directly in <img>/<audio> tags.
+      if (url.pathname === "/local-asset") {
+        const p = url.searchParams.get("p");
+        if (p && fs.existsSync(p) && fs.statSync(p).isFile()) {
+          const buf = fs.readFileSync(p);
+          const ext = path.extname(p).toLowerCase();
+          return new Response(buf, {
+            status: 200,
+            headers: { "content-type": MIME[ext] ?? "application/octet-stream" },
+          });
+        }
+        return new Response("Asset not found", { status: 404 });
+      }
+
       // 1. Static asset from dist/client (assets/, favicon, etc.)
       const staticPath = tryStaticFile(url.pathname);
       if (staticPath) {
@@ -439,6 +455,8 @@ function registerAppProtocol() {
           headers: { "content-type": MIME[ext] ?? "application/octet-stream" },
         });
       }
+
+
 
       // 2. Fall back to the SSR worker handler for app routes.
       const handler = await getSsrHandler();
