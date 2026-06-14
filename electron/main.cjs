@@ -275,6 +275,83 @@ ipcMain.handle("renpy:launch", (_e, projectDir) => {
 
 ipcMain.handle("shell:openPath", (_e, p) => shell.openPath(p));
 
+// ----- Ren'Py import (scan a project folder for .rpy + assets) -----
+// Returns { gameDir, projectRoot, rpyFiles: [{path,content}], assets: [{rel,abs}] }
+// or { error } if the folder isn't a Ren'Py project. The renderer does the
+// actual parsing via src/lib/renpy-import.ts.
+ipcMain.handle("renpy:importScan", async (_e, folderPath) => {
+  if (!folderPath || !fs.existsSync(folderPath)) {
+    return { error: `Folder not found: ${folderPath}` };
+  }
+  let gameDir = path.join(folderPath, "game");
+  let projectRoot = folderPath;
+  if (!fs.existsSync(gameDir)) {
+    // The user may have picked the game/ folder directly.
+    if (
+      path.basename(folderPath).toLowerCase() === "game" ||
+      fs.existsSync(path.join(folderPath, "script.rpy")) ||
+      fs.readdirSync(folderPath).some((f) => f.endsWith(".rpy"))
+    ) {
+      gameDir = folderPath;
+      projectRoot = path.dirname(folderPath);
+    } else {
+      return {
+        error: `No game/ folder or .rpy files found in ${folderPath}. Pick the Ren'Py project root (the folder that contains game/).`,
+      };
+    }
+  }
+
+  const rpyFiles = [];
+  const SKIP_RPY = /^(screens|options|gui|_)/i;
+  function walkRpy(dir) {
+    let entries;
+    try {
+      entries = fs.readdirSync(dir, { withFileTypes: true });
+    } catch {
+      return;
+    }
+    for (const ent of entries) {
+      const full = path.join(dir, ent.name);
+      if (ent.isDirectory()) {
+        if (ent.name === "cache" || ent.name === "saves" || ent.name === "tl") continue;
+        walkRpy(full);
+      } else if (ent.name.toLowerCase().endsWith(".rpy") && !SKIP_RPY.test(ent.name)) {
+        try {
+          rpyFiles.push({
+            path: path.relative(gameDir, full).replace(/\\/g, "/"),
+            content: fs.readFileSync(full, "utf8"),
+          });
+        } catch (err) {
+          console.error(`[renpy:importScan] failed to read ${full}:`, err);
+        }
+      }
+    }
+  }
+  walkRpy(gameDir);
+
+  const assets = [];
+  function walkAssets(dir, relBase) {
+    let entries;
+    try {
+      entries = fs.readdirSync(dir, { withFileTypes: true });
+    } catch {
+      return;
+    }
+    for (const ent of entries) {
+      const full = path.join(dir, ent.name);
+      const rel = relBase ? `${relBase}/${ent.name}` : ent.name;
+      if (ent.isDirectory()) walkAssets(full, rel);
+      else assets.push({ rel, abs: full });
+    }
+  }
+  walkAssets(path.join(gameDir, "images"), "images");
+  walkAssets(path.join(gameDir, "audio"), "audio");
+
+  return { gameDir, projectRoot, rpyFiles, assets };
+});
+
+
+
 // ----- Window -----
 const APP_TITLE = "VN Builder Studio";
 const ICON_PATH = path.join(__dirname, "..", "build", "icon.png");
