@@ -1,11 +1,27 @@
 // Electron main process — VN Builder Studio desktop shell.
 // CommonJS because package.json has "type": "module".
 
-const { app, BrowserWindow, ipcMain, dialog, shell } = require("electron");
+const { app, BrowserWindow, ipcMain, dialog, shell, protocol, net } = require("electron");
 const path = require("node:path");
 const fs = require("node:fs");
 const { spawn } = require("node:child_process");
 const http = require("node:http");
+const { pathToFileURL } = require("node:url");
+
+// Register a privileged custom scheme that serves the built SPA + SSR handler.
+// Must happen before app.whenReady().
+protocol.registerSchemesAsPrivileged([
+  {
+    scheme: "app",
+    privileges: {
+      standard: true,
+      secure: true,
+      supportFetchAPI: true,
+      stream: true,
+      corsEnabled: true,
+    },
+  },
+]);
 
 const detectOllama = require("./detect/ollama.cjs");
 const detectComfy = require("./detect/comfy.cjs");
