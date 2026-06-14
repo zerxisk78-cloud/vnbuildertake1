@@ -107,13 +107,18 @@ function Index() {
               Each project is a standalone visual novel.
             </p>
           </div>
-          <Dialog open={open} onOpenChange={setOpen}>
-            <DialogTrigger asChild>
-              <Button>
-                <Plus className="mr-1 h-4 w-4" />
-                New Project
-              </Button>
-            </DialogTrigger>
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={importRenpy} disabled={importing}>
+              <FolderInput className="mr-1 h-4 w-4" />
+              {importing ? "Importing…" : "Import Ren'Py Project"}
+            </Button>
+            <Dialog open={open} onOpenChange={setOpen}>
+              <DialogTrigger asChild>
+                <Button>
+                  <Plus className="mr-1 h-4 w-4" />
+                  New Project
+                </Button>
+              </DialogTrigger>
             <DialogContent>
               <DialogHeader>
                 <DialogTitle>Create a new project</DialogTitle>
