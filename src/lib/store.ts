@@ -4,6 +4,7 @@ import { bridge } from "./bridge";
 import type { Project, Settings, Scene, Character, LoreEntry, Asset } from "./types";
 import { DEFAULT_SETTINGS } from "./types";
 import { buildExampleProject } from "./example-project";
+import { importRenpyProject, type ImportLogEntry } from "./renpy-import";
 
 interface StoreState {
   projects: Project[];
@@ -15,6 +16,10 @@ interface StoreState {
 
   createProject(name: string, genre: Project["genre"], description: string): Promise<Project>;
   createExampleProject(): Promise<Project>;
+  importRenpyFromFolder(
+    folderPath: string,
+    overrides?: { name?: string },
+  ): Promise<{ project: Project; log: ImportLogEntry[] } | { error: string }>;
   duplicateProject(id: string): Promise<Project | null>;
   deleteProject(id: string): Promise<void>;
   updateProject(id: string, patch: Partial<Project>): Promise<void>;
