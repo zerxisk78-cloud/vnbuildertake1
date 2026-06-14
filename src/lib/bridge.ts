@@ -135,8 +135,8 @@ export const bridge = {
     return out;
   },
 
-  async pickFolder(): Promise<string | null> {
-    if (isElectron()) return window.lovableApi!.pickFolder();
+  async pickFolder(title?: string): Promise<string | null> {
+    if (isElectron()) return window.lovableApi!.pickFolder(title);
     return null;
   },
 
