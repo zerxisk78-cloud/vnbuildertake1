@@ -32,6 +32,15 @@ export interface LovableApi {
   writeBinary(targetDir: string, relPath: string, base64: string): Promise<string>;
   buildRenpy(projectDir: string): Promise<{ ok: boolean; error?: string; message?: string }>;
   launchRenpy(projectDir: string): Promise<{ ok: boolean; error?: string }>;
+  importRenpyScan(folderPath: string): Promise<
+    | { error: string }
+    | {
+        gameDir: string;
+        projectRoot: string;
+        rpyFiles: { path: string; content: string }[];
+        assets: { rel: string; abs: string }[];
+      }
+  >;
   openExternal(url: string): Promise<void>;
   openPath(p: string): Promise<void>;
 }
