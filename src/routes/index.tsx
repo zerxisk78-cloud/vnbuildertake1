@@ -1,6 +1,6 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { BookOpenText, Copy, Plus, Trash2 } from "lucide-react";
+import { BookOpenText, Copy, FolderInput, Plus, Trash2 } from "lucide-react";
 import { AppShell } from "@/components/AppShell";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -23,6 +23,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useStore } from "@/lib/store";
+import { bridge, isElectron } from "@/lib/bridge";
 import { GENRES, type Genre } from "@/lib/types";
 import { toast } from "sonner";
 
@@ -37,12 +38,21 @@ export const Route = createFileRoute("/")({
 });
 
 function Index() {
-  const { projects, loaded, load, createProject, deleteProject, duplicateProject } = useStore();
+  const {
+    projects,
+    loaded,
+    load,
+    createProject,
+    deleteProject,
+    duplicateProject,
+    importRenpyFromFolder,
+  } = useStore();
   const navigate = useNavigate();
   const [open, setOpen] = useState(false);
   const [name, setName] = useState("");
   const [genre, setGenre] = useState<Genre>("Visual Novel");
   const [desc, setDesc] = useState("");
+  const [importing, setImporting] = useState(false);
 
   useEffect(() => {
     if (!loaded) void load();
@@ -58,6 +68,35 @@ function Index() {
     navigate({ to: "/projects/$projectId/scenes", params: { projectId: p.id } });
   }
 
+  async function importRenpy() {
+    if (!isElectron()) {
+      toast.error("Import is only available in the desktop app.");
+      return;
+    }
+    const folder = await bridge.pickFolder("Pick a Ren'Py project (the folder containing game/)");
+    if (!folder) return;
+    setImporting(true);
+    try {
+      const result = await importRenpyFromFolder(folder);
+      if ("error" in result) {
+        toast.error(result.error);
+        return;
+      }
+      const warnings = result.log.filter((l) => l.level === "warn").length;
+      toast.success(
+        `Imported "${result.project.name}" — ${result.project.scenes.length} scenes, ${result.project.characters.length} chars${warnings ? `, ${warnings} warning(s)` : ""}`,
+      );
+      navigate({
+        to: "/projects/$projectId/scenes",
+        params: { projectId: result.project.id },
+      });
+    } catch (e) {
+      toast.error(`Import failed: ${(e as Error).message}`);
+    } finally {
+      setImporting(false);
+    }
+  }
+
   return (
     <AppShell>
       <div className="mx-auto max-w-6xl px-6 py-10">
@@ -68,13 +107,18 @@ function Index() {
               Each project is a standalone visual novel.
             </p>
           </div>
-          <Dialog open={open} onOpenChange={setOpen}>
-            <DialogTrigger asChild>
-              <Button>
-                <Plus className="mr-1 h-4 w-4" />
-                New Project
-              </Button>
-            </DialogTrigger>
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={importRenpy} disabled={importing}>
+              <FolderInput className="mr-1 h-4 w-4" />
+              {importing ? "Importing…" : "Import Ren'Py Project"}
+            </Button>
+            <Dialog open={open} onOpenChange={setOpen}>
+              <DialogTrigger asChild>
+                <Button>
+                  <Plus className="mr-1 h-4 w-4" />
+                  New Project
+                </Button>
+              </DialogTrigger>
             <DialogContent>
               <DialogHeader>
                 <DialogTitle>Create a new project</DialogTitle>
@@ -121,6 +165,7 @@ function Index() {
               </DialogFooter>
             </DialogContent>
           </Dialog>
+          </div>
         </div>
 
         {projects.length === 0 ? (

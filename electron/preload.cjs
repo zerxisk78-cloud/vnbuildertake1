@@ -25,4 +25,5 @@ contextBridge.exposeInMainWorld("lovableApi", {
     ipcRenderer.invoke("renpy:writeBinary", dir, rel, base64),
   buildRenpy: (projectDir) => ipcRenderer.invoke("renpy:build", projectDir),
   launchRenpy: (projectDir) => ipcRenderer.invoke("renpy:launch", projectDir),
+  importRenpyScan: (folderPath) => ipcRenderer.invoke("renpy:importScan", folderPath),
 });

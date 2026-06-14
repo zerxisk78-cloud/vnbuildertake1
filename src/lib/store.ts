@@ -4,6 +4,7 @@ import { bridge } from "./bridge";
 import type { Project, Settings, Scene, Character, LoreEntry, Asset } from "./types";
 import { DEFAULT_SETTINGS } from "./types";
 import { buildExampleProject } from "./example-project";
+import { importRenpyProject, type ImportLogEntry } from "./renpy-import";
 
 interface StoreState {
   projects: Project[];
@@ -15,6 +16,10 @@ interface StoreState {
 
   createProject(name: string, genre: Project["genre"], description: string): Promise<Project>;
   createExampleProject(): Promise<Project>;
+  importRenpyFromFolder(
+    folderPath: string,
+    overrides?: { name?: string },
+  ): Promise<{ project: Project; log: ImportLogEntry[] } | { error: string }>;
   duplicateProject(id: string): Promise<Project | null>;
   deleteProject(id: string): Promise<void>;
   updateProject(id: string, patch: Partial<Project>): Promise<void>;
@@ -93,6 +98,25 @@ export const useStore = create<StoreState>((set, get) => ({
     set({ projects: [...get().projects, project] });
     return project;
   },
+
+  async importRenpyFromFolder(folderPath, overrides) {
+    const scan = await bridge.importRenpyScan(folderPath);
+    if ("error" in scan) return { error: scan.error };
+    const inferredName =
+      overrides?.name ||
+      scan.projectRoot.replace(/\\/g, "/").split("/").filter(Boolean).pop() ||
+      "Imported Ren'Py Project";
+    const { project, log } = importRenpyProject({
+      name: inferredName,
+      rpyFiles: scan.rpyFiles,
+      assets: scan.assets,
+      resolveAssetUrl: (abs) => bridge.localAssetUrl(abs),
+    });
+    await persist(project);
+    set({ projects: [...get().projects, project] });
+    return { project, log };
+  },
+
 
   async duplicateProject(id) {
     const orig = get().projects.find((p) => p.id === id);

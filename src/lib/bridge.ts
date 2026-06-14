@@ -32,6 +32,15 @@ export interface LovableApi {
   writeBinary(targetDir: string, relPath: string, base64: string): Promise<string>;
   buildRenpy(projectDir: string): Promise<{ ok: boolean; error?: string; message?: string }>;
   launchRenpy(projectDir: string): Promise<{ ok: boolean; error?: string }>;
+  importRenpyScan(folderPath: string): Promise<
+    | { error: string }
+    | {
+        gameDir: string;
+        projectRoot: string;
+        rpyFiles: { path: string; content: string }[];
+        assets: { rel: string; abs: string }[];
+      }
+  >;
   openExternal(url: string): Promise<void>;
   openPath(p: string): Promise<void>;
 }
@@ -126,8 +135,8 @@ export const bridge = {
     return out;
   },
 
-  async pickFolder(): Promise<string | null> {
-    if (isElectron()) return window.lovableApi!.pickFolder();
+  async pickFolder(title?: string): Promise<string | null> {
+    if (isElectron()) return window.lovableApi!.pickFolder(title);
     return null;
   },
 
@@ -201,6 +210,22 @@ export const bridge = {
   async launchRenpy(projectDir: string) {
     if (!isElectron()) return { ok: false, error: "Desktop app only" };
     return window.lovableApi!.launchRenpy(projectDir);
+  },
+
+  /** Scan a Ren'Py project folder. Returns raw .rpy text + asset listing for
+   *  the importer to consume. Desktop only. */
+  async importRenpyScan(folderPath: string) {
+    if (!isElectron()) return { error: "Desktop app only" } as const;
+    return window.lovableApi!.importRenpyScan(folderPath);
+  },
+
+  /** Turn an absolute on-disk path into a URL the renderer can load via
+   *  the app:// custom protocol. Falls back to file:// in the web preview. */
+  localAssetUrl(absPath: string): string {
+    if (isElectron()) {
+      return `app://localhost/local-asset?p=${encodeURIComponent(absPath)}`;
+    }
+    return `file://${absPath}`;
   },
 };
 
