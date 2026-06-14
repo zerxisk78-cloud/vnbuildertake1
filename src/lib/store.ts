@@ -99,6 +99,25 @@ export const useStore = create<StoreState>((set, get) => ({
     return project;
   },
 
+  async importRenpyFromFolder(folderPath, overrides) {
+    const scan = await bridge.importRenpyScan(folderPath);
+    if ("error" in scan) return { error: scan.error };
+    const inferredName =
+      overrides?.name ||
+      scan.projectRoot.replace(/\\/g, "/").split("/").filter(Boolean).pop() ||
+      "Imported Ren'Py Project";
+    const { project, log } = importRenpyProject({
+      name: inferredName,
+      rpyFiles: scan.rpyFiles,
+      assets: scan.assets,
+      resolveAssetUrl: (abs) => bridge.localAssetUrl(abs),
+    });
+    await persist(project);
+    set({ projects: [...get().projects, project] });
+    return { project, log };
+  },
+
+
   async duplicateProject(id) {
     const orig = get().projects.find((p) => p.id === id);
     if (!orig) return null;
