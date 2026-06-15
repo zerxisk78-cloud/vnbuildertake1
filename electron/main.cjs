@@ -33,6 +33,18 @@ const DATA_DIR = path.join(path.dirname(app.getPath("exe")), "data");
 const PROJECTS_DIR = path.join(DATA_DIR, "projects");
 const SETTINGS_FILE = path.join(DATA_DIR, "settings.json");
 
+// Folders whose contents the renderer is allowed to read via app://local-asset.
+// Seeded with the projects dir; importers push their scanned project root in.
+const ALLOWED_ASSET_ROOTS = new Set([path.resolve(PROJECTS_DIR)]);
+function isUnderAllowedRoot(absPath) {
+  const resolved = path.resolve(absPath);
+  for (const root of ALLOWED_ASSET_ROOTS) {
+    const rel = path.relative(root, resolved);
+    if (rel === "" || (rel && !rel.startsWith("..") && !path.isAbsolute(rel))) return true;
+  }
+  return false;
+}
+
 function ensureDirs() {
   fs.mkdirSync(PROJECTS_DIR, { recursive: true });
 }
@@ -300,6 +312,7 @@ ipcMain.handle("renpy:importScan", async (_e, folderPath) => {
       };
     }
   }
+  ALLOWED_ASSET_ROOTS.add(path.resolve(projectRoot));
 
   const rpyFiles = [];
   const SKIP_RPY = /^(screens|options|gui|_)/i;
@@ -434,9 +447,15 @@ function registerAppProtocol() {
       //    imported Ren'Py images/audio render directly in <img>/<audio> tags.
       if (url.pathname === "/local-asset") {
         const p = url.searchParams.get("p");
-        if (p && fs.existsSync(p) && fs.statSync(p).isFile()) {
-          const buf = fs.readFileSync(p);
-          const ext = path.extname(p).toLowerCase();
+        if (!p) return new Response("Missing path", { status: 400 });
+        const resolved = path.resolve(p);
+        if (!isUnderAllowedRoot(resolved)) {
+          console.warn("[app://local-asset] denied (outside allowed roots):", resolved);
+          return new Response("Forbidden", { status: 403 });
+        }
+        if (fs.existsSync(resolved) && fs.statSync(resolved).isFile()) {
+          const buf = fs.readFileSync(resolved);
+          const ext = path.extname(resolved).toLowerCase();
           return new Response(buf, {
             status: 200,
             headers: { "content-type": MIME[ext] ?? "application/octet-stream" },
