@@ -33,6 +33,18 @@ const DATA_DIR = path.join(path.dirname(app.getPath("exe")), "data");
 const PROJECTS_DIR = path.join(DATA_DIR, "projects");
 const SETTINGS_FILE = path.join(DATA_DIR, "settings.json");
 
+// Folders whose contents the renderer is allowed to read via app://local-asset.
+// Seeded with the projects dir; importers push their scanned project root in.
+const ALLOWED_ASSET_ROOTS = new Set([path.resolve(PROJECTS_DIR)]);
+function isUnderAllowedRoot(absPath) {
+  const resolved = path.resolve(absPath);
+  for (const root of ALLOWED_ASSET_ROOTS) {
+    const rel = path.relative(root, resolved);
+    if (rel === "" || (rel && !rel.startsWith("..") && !path.isAbsolute(rel))) return true;
+  }
+  return false;
+}
+
 function ensureDirs() {
   fs.mkdirSync(PROJECTS_DIR, { recursive: true });
 }
@@ -300,6 +312,7 @@ ipcMain.handle("renpy:importScan", async (_e, folderPath) => {
       };
     }
   }
+  ALLOWED_ASSET_ROOTS.add(path.resolve(projectRoot));
 
   const rpyFiles = [];
   const SKIP_RPY = /^(screens|options|gui|_)/i;
@@ -348,6 +361,54 @@ ipcMain.handle("renpy:importScan", async (_e, folderPath) => {
   walkAssets(path.join(gameDir, "audio"), "audio");
 
   return { gameDir, projectRoot, rpyFiles, assets };
+});
+
+// ----- RPG Maker MV/MZ import (scan a project folder for data/*.json + assets) -----
+// Returns { projectRoot, dataFiles: [{rel,abs,json}], assetFiles: [{rel,abs}] }
+// or { error } if the folder doesn't look like an RPG Maker project.
+ipcMain.handle("rpgmaker:importScan", async (_e, folderPath) => {
+  if (!folderPath || !fs.existsSync(folderPath)) {
+    return { error: `Folder not found: ${folderPath}` };
+  }
+  const dataDir = path.join(folderPath, "data");
+  if (!fs.existsSync(dataDir) || !fs.statSync(dataDir).isDirectory()) {
+    return {
+      error: `No data/ folder found in ${folderPath}. Pick the RPG Maker MV/MZ project root (the folder that contains data/, img/, audio/).`,
+    };
+  }
+  ALLOWED_ASSET_ROOTS.add(path.resolve(folderPath));
+
+  const dataFiles = [];
+  for (const ent of fs.readdirSync(dataDir, { withFileTypes: true })) {
+    if (!ent.isFile() || !ent.name.toLowerCase().endsWith(".json")) continue;
+    const abs = path.join(dataDir, ent.name);
+    try {
+      const json = JSON.parse(fs.readFileSync(abs, "utf8"));
+      dataFiles.push({ rel: `data/${ent.name}`, abs, json });
+    } catch (err) {
+      console.warn(`[rpgmaker:importScan] skipping invalid JSON ${ent.name}:`, err.message);
+    }
+  }
+
+  const assetFiles = [];
+  function walkBinary(dir, relBase) {
+    let entries;
+    try {
+      entries = fs.readdirSync(dir, { withFileTypes: true });
+    } catch {
+      return;
+    }
+    for (const ent of entries) {
+      const full = path.join(dir, ent.name);
+      const rel = relBase ? `${relBase}/${ent.name}` : ent.name;
+      if (ent.isDirectory()) walkBinary(full, rel);
+      else assetFiles.push({ rel, abs: full });
+    }
+  }
+  walkBinary(path.join(folderPath, "img"), "img");
+  walkBinary(path.join(folderPath, "audio"), "audio");
+
+  return { projectRoot: folderPath, dataFiles, assetFiles };
 });
 
 
@@ -434,9 +495,15 @@ function registerAppProtocol() {
       //    imported Ren'Py images/audio render directly in <img>/<audio> tags.
       if (url.pathname === "/local-asset") {
         const p = url.searchParams.get("p");
-        if (p && fs.existsSync(p) && fs.statSync(p).isFile()) {
-          const buf = fs.readFileSync(p);
-          const ext = path.extname(p).toLowerCase();
+        if (!p) return new Response("Missing path", { status: 400 });
+        const resolved = path.resolve(p);
+        if (!isUnderAllowedRoot(resolved)) {
+          console.warn("[app://local-asset] denied (outside allowed roots):", resolved);
+          return new Response("Forbidden", { status: 403 });
+        }
+        if (fs.existsSync(resolved) && fs.statSync(resolved).isFile()) {
+          const buf = fs.readFileSync(resolved);
+          const ext = path.extname(resolved).toLowerCase();
           return new Response(buf, {
             status: 200,
             headers: { "content-type": MIME[ext] ?? "application/octet-stream" },

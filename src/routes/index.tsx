@@ -46,13 +46,14 @@ function Index() {
     deleteProject,
     duplicateProject,
     importRenpyFromFolder,
+    importRpgMakerFromFolder,
   } = useStore();
   const navigate = useNavigate();
   const [open, setOpen] = useState(false);
   const [name, setName] = useState("");
   const [genre, setGenre] = useState<Genre>("Visual Novel");
   const [desc, setDesc] = useState("");
-  const [importing, setImporting] = useState(false);
+  const [importing, setImporting] = useState<null | "renpy" | "rpgm">(null);
 
   useEffect(() => {
     if (!loaded) void load();
@@ -75,7 +76,7 @@ function Index() {
     }
     const folder = await bridge.pickFolder("Pick a Ren'Py project (the folder containing game/)");
     if (!folder) return;
-    setImporting(true);
+    setImporting("renpy");
     try {
       const result = await importRenpyFromFolder(folder);
       if ("error" in result) {
@@ -93,7 +94,38 @@ function Index() {
     } catch (e) {
       toast.error(`Import failed: ${(e as Error).message}`);
     } finally {
-      setImporting(false);
+      setImporting(null);
+    }
+  }
+
+  async function importRpgMaker() {
+    if (!isElectron()) {
+      toast.error("Import is only available in the desktop app.");
+      return;
+    }
+    const folder = await bridge.pickFolder(
+      "Pick an RPG Maker MV/MZ project (the folder containing data/, img/, audio/)",
+    );
+    if (!folder) return;
+    setImporting("rpgm");
+    try {
+      const result = await importRpgMakerFromFolder(folder);
+      if ("error" in result) {
+        toast.error(result.error);
+        return;
+      }
+      const warnings = result.log.filter((l) => l.level === "warn").length;
+      toast.success(
+        `Imported "${result.project.name}" — ${result.project.scenes.length} scenes, ${result.project.characters.length} chars${warnings ? `, ${warnings} warning(s)` : ""}`,
+      );
+      navigate({
+        to: "/projects/$projectId/scenes",
+        params: { projectId: result.project.id },
+      });
+    } catch (e) {
+      toast.error(`Import failed: ${(e as Error).message}`);
+    } finally {
+      setImporting(null);
     }
   }
 
@@ -108,9 +140,13 @@ function Index() {
             </p>
           </div>
           <div className="flex gap-2">
-            <Button variant="outline" onClick={importRenpy} disabled={importing}>
+            <Button variant="outline" onClick={importRenpy} disabled={!!importing}>
               <FolderInput className="mr-1 h-4 w-4" />
-              {importing ? "Importing…" : "Import Ren'Py Project"}
+              {importing === "renpy" ? "Importing…" : "Import Ren'Py"}
+            </Button>
+            <Button variant="outline" onClick={importRpgMaker} disabled={!!importing}>
+              <FolderInput className="mr-1 h-4 w-4" />
+              {importing === "rpgm" ? "Importing…" : "Import RPG Maker"}
             </Button>
             <Dialog open={open} onOpenChange={setOpen}>
               <DialogTrigger asChild>

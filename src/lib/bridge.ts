@@ -41,6 +41,14 @@ export interface LovableApi {
         assets: { rel: string; abs: string }[];
       }
   >;
+  importRpgMakerScan(folderPath: string): Promise<
+    | { error: string }
+    | {
+        projectRoot: string;
+        dataFiles: { rel: string; abs: string; json: unknown }[];
+        assetFiles: { rel: string; abs: string }[];
+      }
+  >;
   openExternal(url: string): Promise<void>;
   openPath(p: string): Promise<void>;
 }
@@ -217,6 +225,13 @@ export const bridge = {
   async importRenpyScan(folderPath: string) {
     if (!isElectron()) return { error: "Desktop app only" } as const;
     return window.lovableApi!.importRenpyScan(folderPath);
+  },
+
+  /** Scan an RPG Maker MV/MZ project folder. Returns parsed data/*.json + asset
+   *  paths under img/ and audio/. Desktop only. */
+  async importRpgMakerScan(folderPath: string) {
+    if (!isElectron()) return { error: "Desktop app only" } as const;
+    return window.lovableApi!.importRpgMakerScan(folderPath);
   },
 
   /** Turn an absolute on-disk path into a URL the renderer can load via
