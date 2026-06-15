@@ -363,6 +363,54 @@ ipcMain.handle("renpy:importScan", async (_e, folderPath) => {
   return { gameDir, projectRoot, rpyFiles, assets };
 });
 
+// ----- RPG Maker MV/MZ import (scan a project folder for data/*.json + assets) -----
+// Returns { projectRoot, dataFiles: [{rel,abs,json}], assetFiles: [{rel,abs}] }
+// or { error } if the folder doesn't look like an RPG Maker project.
+ipcMain.handle("rpgmaker:importScan", async (_e, folderPath) => {
+  if (!folderPath || !fs.existsSync(folderPath)) {
+    return { error: `Folder not found: ${folderPath}` };
+  }
+  const dataDir = path.join(folderPath, "data");
+  if (!fs.existsSync(dataDir) || !fs.statSync(dataDir).isDirectory()) {
+    return {
+      error: `No data/ folder found in ${folderPath}. Pick the RPG Maker MV/MZ project root (the folder that contains data/, img/, audio/).`,
+    };
+  }
+  ALLOWED_ASSET_ROOTS.add(path.resolve(folderPath));
+
+  const dataFiles = [];
+  for (const ent of fs.readdirSync(dataDir, { withFileTypes: true })) {
+    if (!ent.isFile() || !ent.name.toLowerCase().endsWith(".json")) continue;
+    const abs = path.join(dataDir, ent.name);
+    try {
+      const json = JSON.parse(fs.readFileSync(abs, "utf8"));
+      dataFiles.push({ rel: `data/${ent.name}`, abs, json });
+    } catch (err) {
+      console.warn(`[rpgmaker:importScan] skipping invalid JSON ${ent.name}:`, err.message);
+    }
+  }
+
+  const assetFiles = [];
+  function walkBinary(dir, relBase) {
+    let entries;
+    try {
+      entries = fs.readdirSync(dir, { withFileTypes: true });
+    } catch {
+      return;
+    }
+    for (const ent of entries) {
+      const full = path.join(dir, ent.name);
+      const rel = relBase ? `${relBase}/${ent.name}` : ent.name;
+      if (ent.isDirectory()) walkBinary(full, rel);
+      else assetFiles.push({ rel, abs: full });
+    }
+  }
+  walkBinary(path.join(folderPath, "img"), "img");
+  walkBinary(path.join(folderPath, "audio"), "audio");
+
+  return { projectRoot: folderPath, dataFiles, assetFiles };
+});
+
 
 
 // ----- Window -----

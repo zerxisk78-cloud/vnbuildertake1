@@ -26,4 +26,5 @@ contextBridge.exposeInMainWorld("lovableApi", {
   buildRenpy: (projectDir) => ipcRenderer.invoke("renpy:build", projectDir),
   launchRenpy: (projectDir) => ipcRenderer.invoke("renpy:launch", projectDir),
   importRenpyScan: (folderPath) => ipcRenderer.invoke("renpy:importScan", folderPath),
+  importRpgMakerScan: (folderPath) => ipcRenderer.invoke("rpgmaker:importScan", folderPath),
 });

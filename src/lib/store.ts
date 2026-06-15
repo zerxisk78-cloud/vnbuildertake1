@@ -5,6 +5,7 @@ import type { Project, Settings, Scene, Character, LoreEntry, Asset } from "./ty
 import { DEFAULT_SETTINGS } from "./types";
 import { buildExampleProject } from "./example-project";
 import { importRenpyProject, type ImportLogEntry } from "./renpy-import";
+import { importRpgMakerProject, type RpgImportLogEntry } from "./rpgmaker-import";
 
 interface StoreState {
   projects: Project[];
@@ -20,6 +21,10 @@ interface StoreState {
     folderPath: string,
     overrides?: { name?: string },
   ): Promise<{ project: Project; log: ImportLogEntry[] } | { error: string }>;
+  importRpgMakerFromFolder(
+    folderPath: string,
+    overrides?: { name?: string },
+  ): Promise<{ project: Project; log: RpgImportLogEntry[] } | { error: string }>;
   duplicateProject(id: string): Promise<Project | null>;
   deleteProject(id: string): Promise<void>;
   updateProject(id: string, patch: Partial<Project>): Promise<void>;
@@ -110,6 +115,24 @@ export const useStore = create<StoreState>((set, get) => ({
       name: inferredName,
       rpyFiles: scan.rpyFiles,
       assets: scan.assets,
+      resolveAssetUrl: (abs) => bridge.localAssetUrl(abs),
+    });
+    await persist(project);
+    set({ projects: [...get().projects, project] });
+    return { project, log };
+  },
+
+  async importRpgMakerFromFolder(folderPath, overrides) {
+    const scan = await bridge.importRpgMakerScan(folderPath);
+    if ("error" in scan) return { error: scan.error };
+    const inferredName =
+      overrides?.name ||
+      scan.projectRoot.replace(/\\/g, "/").split("/").filter(Boolean).pop() ||
+      "Imported RPG Maker Project";
+    const { project, log } = importRpgMakerProject({
+      name: inferredName,
+      dataFiles: scan.dataFiles,
+      assetFiles: scan.assetFiles,
       resolveAssetUrl: (abs) => bridge.localAssetUrl(abs),
     });
     await persist(project);
