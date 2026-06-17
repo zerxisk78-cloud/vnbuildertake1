@@ -1,6 +1,9 @@
 // Electron main process — VN Builder Studio desktop shell.
 // CommonJS because package.json has "type": "module".
 
+const BUILD_TAG = "ssr-protocol-v2";
+console.log(`[vnstudio] main.cjs BUILD_TAG=${BUILD_TAG}`);
+
 const { app, BrowserWindow, ipcMain, dialog, shell, protocol, net } = require("electron");
 const path = require("node:path");
 const fs = require("node:fs");
