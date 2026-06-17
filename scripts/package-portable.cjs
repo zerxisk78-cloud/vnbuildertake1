@@ -11,7 +11,13 @@ const path = require("node:path");
 const ROOT = path.resolve(__dirname, "..");
 const OUT_DIR = path.join(ROOT, "dist-electron");
 const APP_NAME = "VNStudio";
-const PACKAGED_DIR = path.join(OUT_DIR, `${APP_NAME}-win32-x64`);
+const BUILD_ID = new Date().toISOString().replace(/[-:]/g, "").replace(/\..+/, "");
+const BUILD_OUT_DIR = path.join(OUT_DIR, "builds", BUILD_ID);
+const PACKAGED_DIR = path.join(BUILD_OUT_DIR, `${APP_NAME}-win32-x64`);
+
+function psQuote(value) {
+  return `'${String(value).replace(/'/g, "''")}'`;
+}
 
 function run(cmd, args, opts = {}) {
   console.log(`\n$ ${cmd} ${args.join(" ")}`);
@@ -26,13 +32,14 @@ console.log("[package-portable] 1/4 vite build");
 run("npx", ["cross-env", "ELECTRON_BUILD=1", "vite", "build"]);
 
 console.log("[package-portable] 2/4 electron-packager");
+fs.mkdirSync(BUILD_OUT_DIR, { recursive: true });
 run("npx", [
   "@electron/packager",
   ".",
   APP_NAME,
   "--platform=win32",
   "--arch=x64",
-  `--out=${OUT_DIR}`,
+  `--out=${BUILD_OUT_DIR}`,
   "--overwrite",
   "--no-asar",
   "--icon=build/icon.png",
@@ -50,6 +57,7 @@ run("npx", [
 console.log("[package-portable] 3/4 drop launcher + README");
 const launcher = `@echo off\r\nstart "" "%~dp0${APP_NAME}.exe"\r\n`;
 fs.writeFileSync(path.join(PACKAGED_DIR, "Start VN Studio.bat"), launcher);
+fs.writeFileSync(path.join(OUT_DIR, "LATEST.txt"), path.relative(OUT_DIR, PACKAGED_DIR).replace(/\\/g, "/"));
 fs.writeFileSync(
   path.join(PACKAGED_DIR, "README-FIRST.txt"),
   [
@@ -84,7 +92,7 @@ if (isWin) {
   run("powershell", [
     "-NoProfile",
     "-Command",
-    `Compress-Archive -Path '${PACKAGED_DIR}' -DestinationPath '${zipPath}'`,
+    `Compress-Archive -Path ${psQuote(PACKAGED_DIR)} -DestinationPath ${psQuote(zipPath)} -Force`,
   ]);
 } else {
   run("bash", ["-c", `cd '${OUT_DIR}' && zip -r '${zipName}' '${path.basename(PACKAGED_DIR)}'`]);
