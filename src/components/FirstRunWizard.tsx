@@ -94,11 +94,12 @@ export function FirstRunWizard() {
                     )}
                     <div className="min-w-0">
                       <div className="text-sm font-medium">{meta.label}</div>
-                      <div className="truncate text-xs text-muted-foreground">
+                      <div className="break-words text-xs text-muted-foreground">
                         {r ? (r.detail ?? r.status) : "—"}
                         {meta.required ? "" : " · optional"}
                       </div>
                     </div>
+
                   </div>
                   {!ok && (
                     <Button
