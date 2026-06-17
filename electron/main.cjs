@@ -510,6 +510,12 @@ function withCsp(response) {
 
 function registerAppProtocol() {
   protocol.handle("app", async (request) => {
+    const response = await handleAppRequest(request);
+    return withCsp(response);
+  });
+}
+
+async function handleAppRequest(request) {
     try {
       const url = new URL(request.url);
 
@@ -576,8 +582,8 @@ function registerAppProtocol() {
         headers: { "content-type": "text/html; charset=utf-8" },
       });
     }
-  });
 }
+
 
 function createWindow() {
   const splash = createSplash();
