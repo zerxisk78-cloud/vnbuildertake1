@@ -120,6 +120,16 @@ export const bridge = {
     if (typeof localStorage !== "undefined") localStorage.removeItem(LS_PROJECT(id));
   },
 
+  async readChats(projectId: string): Promise<ChatMsg[]> {
+    if (isElectron()) return window.lovableApi!.readChats(projectId);
+    return lsGet<ChatMsg[]>(LS_CHATS(projectId), []);
+  },
+
+  async writeChats(projectId: string, messages: ChatMsg[]): Promise<void> {
+    if (isElectron()) return window.lovableApi!.writeChats(projectId, messages);
+    lsSet(LS_CHATS(projectId), messages);
+  },
+
   async readSettings(): Promise<Settings> {
     if (isElectron()) return window.lovableApi!.readSettings();
     return lsGet<Settings>(LS_SETTINGS, DEFAULT_SETTINGS);
