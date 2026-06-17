@@ -616,11 +616,12 @@ function createWindow() {
   }
   logToFile(`startup BUILD_TAG=${BUILD_TAG} CLIENT_DIR=${CLIENT_DIR} SERVER_BUNDLE=${SERVER_BUNDLE}`);
 
-  // Preflight: confirm the bundled files we expect actually exist.
-  const indexHtml = path.join(CLIENT_DIR, "index.html");
+  // Preflight: confirm the SSR bundle exists. TanStack Start renders HTML
+  // at runtime via the SSR handler, so there is no static dist/client/index.html.
   const missing = [];
-  if (!fs.existsSync(indexHtml)) missing.push(indexHtml);
   if (!fs.existsSync(SERVER_BUNDLE)) missing.push(SERVER_BUNDLE);
+  if (!fs.existsSync(CLIENT_DIR)) missing.push(CLIENT_DIR);
+
 
   // Surface load failures so users don't just see a blank window.
   win.webContents.on("did-fail-load", (_e, code, desc, failedUrl) => {
