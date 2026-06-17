@@ -1,15 +1,17 @@
 @echo off
+setlocal enabledelayedexpansion
 title VN Builder Studio
 cd /d "%~dp0"
 
 set "EXE=dist-electron\VNStudio-win32-x64\VNStudio.exe"
 if exist "dist-electron\LATEST.txt" (
     set /p LATEST=<"dist-electron\LATEST.txt"
-    set "EXE=dist-electron\%LATEST%\VNStudio.exe"
+    set "EXE=dist-electron\!LATEST!\VNStudio.exe"
 )
 
-if not exist "%EXE%" (
-    echo VNStudio.exe not found.
+if not exist "!EXE!" (
+    echo VNStudio.exe not found at:
+    echo   !EXE!
     echo.
     echo Run Install-VNStudio.bat first to build the app.
     echo.
@@ -18,4 +20,6 @@ if not exist "%EXE%" (
 )
 
 echo Launching VN Builder Studio...
-start "" "%EXE%"
+echo   !EXE!
+start "" "!EXE!"
+endlocal
