@@ -4,6 +4,12 @@
 import type { Project, Settings, DepReport } from "./types";
 import { DEFAULT_SETTINGS } from "./types";
 
+export interface ChatMsg {
+  role: "user" | "assistant";
+  content: string;
+  ts?: number;
+}
+
 declare global {
   interface Window {
     lovableApi?: LovableApi;
