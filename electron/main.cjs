@@ -1,6 +1,9 @@
 // Electron main process — VN Builder Studio desktop shell.
 // CommonJS because package.json has "type": "module".
 
+const BUILD_TAG = "ssr-protocol-v2";
+console.log(`[vnstudio] main.cjs BUILD_TAG=${BUILD_TAG}`);
+
 const { app, BrowserWindow, ipcMain, dialog, shell, protocol, net } = require("electron");
 const path = require("node:path");
 const fs = require("node:fs");
@@ -486,10 +489,36 @@ function tryStaticFile(urlPathname) {
   return abs;
 }
 
+const CSP_HEADER = [
+  "default-src 'self' app: data: blob:",
+  "script-src 'self' 'unsafe-inline' app:",
+  "style-src 'self' 'unsafe-inline' app:",
+  "img-src 'self' app: data: blob: http://127.0.0.1:* http://localhost:*",
+  "media-src 'self' app: blob: http://127.0.0.1:* http://localhost:*",
+  "connect-src 'self' app: ws: wss: http://127.0.0.1:* http://localhost:* https:",
+  "font-src 'self' app: data:",
+].join("; ");
+
+function withCsp(response) {
+  try {
+    response.headers.set("content-security-policy", CSP_HEADER);
+  } catch {
+    /* immutable headers — ignore */
+  }
+  return response;
+}
+
 function registerAppProtocol() {
   protocol.handle("app", async (request) => {
+    const response = await handleAppRequest(request);
+    return withCsp(response);
+  });
+}
+
+async function handleAppRequest(request) {
     try {
       const url = new URL(request.url);
+
 
       // 0. Local-asset passthrough: serves any absolute file path on disk so
       //    imported Ren'Py images/audio render directly in <img>/<audio> tags.
@@ -553,8 +582,8 @@ function registerAppProtocol() {
         headers: { "content-type": "text/html; charset=utf-8" },
       });
     }
-  });
 }
+
 
 function createWindow() {
   const splash = createSplash();
@@ -575,17 +604,51 @@ function createWindow() {
   win.setTitle(APP_TITLE);
   win.on("page-title-updated", (e) => e.preventDefault());
 
+  const LOG_DIR = path.join(DATA_DIR, "logs");
+  const LOG_FILE = path.join(LOG_DIR, "electron.log");
+  function logToFile(line) {
+    try {
+      fs.mkdirSync(LOG_DIR, { recursive: true });
+      fs.appendFileSync(LOG_FILE, `[${new Date().toISOString()}] ${line}\n`);
+    } catch {
+      /* noop */
+    }
+  }
+  logToFile(`startup BUILD_TAG=${BUILD_TAG} CLIENT_DIR=${CLIENT_DIR} SERVER_BUNDLE=${SERVER_BUNDLE}`);
+
+  // Preflight: confirm the bundled files we expect actually exist.
+  const indexHtml = path.join(CLIENT_DIR, "index.html");
+  const missing = [];
+  if (!fs.existsSync(indexHtml)) missing.push(indexHtml);
+  if (!fs.existsSync(SERVER_BUNDLE)) missing.push(SERVER_BUNDLE);
+
   // Surface load failures so users don't just see a blank window.
-  win.webContents.on("did-fail-load", (_e, code, desc, url) => {
-    console.error(`[window] did-fail-load ${code} ${desc} ${url}`);
+  win.webContents.on("did-fail-load", (_e, code, desc, failedUrl) => {
+    const msg = `did-fail-load ${code} ${desc} ${failedUrl}`;
+    console.error(`[window] ${msg}`);
+    logToFile(msg);
     win.webContents.loadURL(
       "data:text/html;charset=utf-8," +
         encodeURIComponent(
-          `<body style="font:14px system-ui;padding:24px;background:#0b0f17;color:#e2e8f0"><h2>Failed to load app</h2><pre>${desc} (${code})\n${url}</pre><p>Open DevTools (Ctrl+Shift+I) for more.</p></body>`,
+          `<body style="font:14px system-ui;padding:24px;background:#0b0f17;color:#e2e8f0"><h2>Failed to load app</h2><pre>${desc} (${code})\n${failedUrl}</pre><p>Log: ${LOG_FILE}</p><p>Open DevTools (Ctrl+Shift+I) for more.</p></body>`,
         ),
     );
     win.show();
   });
+
+  if (missing.length > 0) {
+    const msg = `Preflight failed. Missing bundled files:\n${missing.join("\n")}\n\nExpected under: ${path.dirname(CLIENT_DIR)}\n\nLog file: ${LOG_FILE}\n\nRebuild with: bun run package:portable`;
+    logToFile(msg);
+    win.webContents.loadURL(
+      "data:text/html;charset=utf-8," +
+        encodeURIComponent(
+          `<body style="font:14px system-ui;padding:24px;background:#0b0f17;color:#e2e8f0"><h2>VN Builder Studio — build incomplete</h2><pre>${msg}</pre></body>`,
+        ),
+    );
+    try { splash.close(); } catch { /* noop */ }
+    win.show();
+    return;
+  }
 
   win.loadURL("app://localhost/");
 

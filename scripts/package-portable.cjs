@@ -34,6 +34,7 @@ run("npx", [
   "--arch=x64",
   `--out=${OUT_DIR}`,
   "--overwrite",
+  "--no-asar",
   "--icon=build/icon.png",
   "--app-version=0.1.0",
   '--win32metadata.ProductName="VN Builder Studio"',
