@@ -4,6 +4,12 @@
 import type { Project, Settings, DepReport } from "./types";
 import { DEFAULT_SETTINGS } from "./types";
 
+export interface ChatMsg {
+  role: "user" | "assistant";
+  content: string;
+  ts?: number;
+}
+
 declare global {
   interface Window {
     lovableApi?: LovableApi;
@@ -16,6 +22,8 @@ export interface LovableApi {
   readProject(id: string): Promise<Project | null>;
   writeProject(project: Project): Promise<void>;
   deleteProject(id: string): Promise<void>;
+  readChats(projectId: string): Promise<ChatMsg[]>;
+  writeChats(projectId: string, messages: ChatMsg[]): Promise<void>;
   readSettings(): Promise<Settings>;
   writeSettings(s: Settings): Promise<void>;
   detectAll(): Promise<Record<string, DepReport>>;
@@ -59,6 +67,7 @@ export const isElectron = (): boolean =>
 const LS_PROJECTS_INDEX = "vnstudio:projectIndex";
 const LS_PROJECT = (id: string) => `vnstudio:project:${id}`;
 const LS_SETTINGS = "vnstudio:settings";
+const LS_CHATS = (id: string) => `vnstudio:chats:${id}`;
 
 function lsGet<T>(key: string, fallback: T): T {
   if (typeof localStorage === "undefined") return fallback;
@@ -109,6 +118,16 @@ export const bridge = {
     const ids = lsGet<string[]>(LS_PROJECTS_INDEX, []).filter((x) => x !== id);
     lsSet(LS_PROJECTS_INDEX, ids);
     if (typeof localStorage !== "undefined") localStorage.removeItem(LS_PROJECT(id));
+  },
+
+  async readChats(projectId: string): Promise<ChatMsg[]> {
+    if (isElectron()) return window.lovableApi!.readChats(projectId);
+    return lsGet<ChatMsg[]>(LS_CHATS(projectId), []);
+  },
+
+  async writeChats(projectId: string, messages: ChatMsg[]): Promise<void> {
+    if (isElectron()) return window.lovableApi!.writeChats(projectId, messages);
+    lsSet(LS_CHATS(projectId), messages);
   },
 
   async readSettings(): Promise<Settings> {

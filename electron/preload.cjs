@@ -7,6 +7,8 @@ contextBridge.exposeInMainWorld("lovableApi", {
   readProject: (id) => ipcRenderer.invoke("projects:read", id),
   writeProject: (p) => ipcRenderer.invoke("projects:write", p),
   deleteProject: (id) => ipcRenderer.invoke("projects:delete", id),
+  readChats: (projectId) => ipcRenderer.invoke("chats:read", projectId),
+  writeChats: (projectId, messages) => ipcRenderer.invoke("chats:write", projectId, messages),
   readSettings: () => ipcRenderer.invoke("settings:read"),
   writeSettings: (s) => ipcRenderer.invoke("settings:write", s),
   detectAll: () => ipcRenderer.invoke("detect:all"),

@@ -65,22 +65,53 @@ function writeJson(file, value) {
   fs.writeFileSync(file, JSON.stringify(value, null, 2));
 }
 
-// ----- Project storage -----
+// ----- Project storage (split per category into separate files) -----
+const CATEGORY_FILES = {
+  scenes: "scenes.json",
+  characters: "characters.json",
+  lorebook: "lorebook.json",
+  assets: "assets.json",
+};
+function readProjectMerged(id) {
+  const dir = path.join(PROJECTS_DIR, id);
+  const legacy = readJson(path.join(dir, "project.json"), null);
+  const meta = readJson(path.join(dir, "meta.json"), null) || legacy;
+  if (!meta) return null;
+  const proj = { ...meta };
+  for (const [k, file] of Object.entries(CATEGORY_FILES)) {
+    const v = readJson(path.join(dir, file), null);
+    proj[k] = Array.isArray(v) ? v : (legacy && Array.isArray(legacy[k]) ? legacy[k] : []);
+  }
+  return proj;
+}
+function writeProjectSplit(project) {
+  const dir = path.join(PROJECTS_DIR, project.id);
+  fs.mkdirSync(dir, { recursive: true });
+  const { scenes, characters, lorebook, assets, ...meta } = project;
+  writeJson(path.join(dir, "meta.json"), meta);
+  writeJson(path.join(dir, "scenes.json"), scenes || []);
+  writeJson(path.join(dir, "characters.json"), characters || []);
+  writeJson(path.join(dir, "lorebook.json"), lorebook || []);
+  writeJson(path.join(dir, "assets.json"), assets || []);
+  // Keep a combined project.json for backward compatibility / portability.
+  writeJson(path.join(dir, "project.json"), project);
+}
 ipcMain.handle("projects:list", () => {
   ensureDirs();
-  return fs
-    .readdirSync(PROJECTS_DIR)
-    .map((id) => readJson(path.join(PROJECTS_DIR, id, "project.json"), null))
-    .filter(Boolean);
+  return fs.readdirSync(PROJECTS_DIR).map(readProjectMerged).filter(Boolean);
 });
-ipcMain.handle("projects:read", (_e, id) =>
-  readJson(path.join(PROJECTS_DIR, id, "project.json"), null),
-);
-ipcMain.handle("projects:write", (_e, project) => {
-  writeJson(path.join(PROJECTS_DIR, project.id, "project.json"), project);
-});
+ipcMain.handle("projects:read", (_e, id) => readProjectMerged(id));
+ipcMain.handle("projects:write", (_e, project) => writeProjectSplit(project));
 ipcMain.handle("projects:delete", (_e, id) => {
   fs.rmSync(path.join(PROJECTS_DIR, id), { recursive: true, force: true });
+});
+
+// ----- Chat history per project -----
+ipcMain.handle("chats:read", (_e, projectId) =>
+  readJson(path.join(PROJECTS_DIR, projectId, "chats.json"), []),
+);
+ipcMain.handle("chats:write", (_e, projectId, messages) => {
+  writeJson(path.join(PROJECTS_DIR, projectId, "chats.json"), messages || []);
 });
 
 // ----- Settings -----
