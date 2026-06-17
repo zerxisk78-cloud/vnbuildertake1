@@ -604,17 +604,51 @@ function createWindow() {
   win.setTitle(APP_TITLE);
   win.on("page-title-updated", (e) => e.preventDefault());
 
+  const LOG_DIR = path.join(DATA_DIR, "logs");
+  const LOG_FILE = path.join(LOG_DIR, "electron.log");
+  function logToFile(line) {
+    try {
+      fs.mkdirSync(LOG_DIR, { recursive: true });
+      fs.appendFileSync(LOG_FILE, `[${new Date().toISOString()}] ${line}\n`);
+    } catch {
+      /* noop */
+    }
+  }
+  logToFile(`startup BUILD_TAG=${BUILD_TAG} CLIENT_DIR=${CLIENT_DIR} SERVER_BUNDLE=${SERVER_BUNDLE}`);
+
+  // Preflight: confirm the bundled files we expect actually exist.
+  const indexHtml = path.join(CLIENT_DIR, "index.html");
+  const missing = [];
+  if (!fs.existsSync(indexHtml)) missing.push(indexHtml);
+  if (!fs.existsSync(SERVER_BUNDLE)) missing.push(SERVER_BUNDLE);
+
   // Surface load failures so users don't just see a blank window.
-  win.webContents.on("did-fail-load", (_e, code, desc, url) => {
-    console.error(`[window] did-fail-load ${code} ${desc} ${url}`);
+  win.webContents.on("did-fail-load", (_e, code, desc, failedUrl) => {
+    const msg = `did-fail-load ${code} ${desc} ${failedUrl}`;
+    console.error(`[window] ${msg}`);
+    logToFile(msg);
     win.webContents.loadURL(
       "data:text/html;charset=utf-8," +
         encodeURIComponent(
-          `<body style="font:14px system-ui;padding:24px;background:#0b0f17;color:#e2e8f0"><h2>Failed to load app</h2><pre>${desc} (${code})\n${url}</pre><p>Open DevTools (Ctrl+Shift+I) for more.</p></body>`,
+          `<body style="font:14px system-ui;padding:24px;background:#0b0f17;color:#e2e8f0"><h2>Failed to load app</h2><pre>${desc} (${code})\n${failedUrl}</pre><p>Log: ${LOG_FILE}</p><p>Open DevTools (Ctrl+Shift+I) for more.</p></body>`,
         ),
     );
     win.show();
   });
+
+  if (missing.length > 0) {
+    const msg = `Preflight failed. Missing bundled files:\n${missing.join("\n")}\n\nExpected under: ${path.dirname(CLIENT_DIR)}\n\nLog file: ${LOG_FILE}\n\nRebuild with: bun run package:portable`;
+    logToFile(msg);
+    win.webContents.loadURL(
+      "data:text/html;charset=utf-8," +
+        encodeURIComponent(
+          `<body style="font:14px system-ui;padding:24px;background:#0b0f17;color:#e2e8f0"><h2>VN Builder Studio — build incomplete</h2><pre>${msg}</pre></body>`,
+        ),
+    );
+    try { splash.close(); } catch { /* noop */ }
+    win.show();
+    return;
+  }
 
   win.loadURL("app://localhost/");
 
