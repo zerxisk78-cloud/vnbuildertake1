@@ -59,10 +59,21 @@ export const useStore = create<StoreState>((set, get) => ({
   loaded: false,
 
   async load() {
-    const [projects, settings] = await Promise.all([
+    const [projects, loadedSettings] = await Promise.all([
       bridge.listProjects(),
       bridge.readSettings(),
     ]);
+    // Deep-merge with defaults so older persisted settings files don't crash
+    // the UI when new fields are added in later versions.
+    const s = (loadedSettings ?? {}) as Partial<Settings>;
+    const settings: Settings = {
+      ...DEFAULT_SETTINGS,
+      ...s,
+      ollama: { ...DEFAULT_SETTINGS.ollama, ...(s.ollama ?? {}) },
+      comfy: { ...DEFAULT_SETTINGS.comfy, ...(s.comfy ?? {}) },
+      xtts: { ...DEFAULT_SETTINGS.xtts, ...(s.xtts ?? {}) },
+      renpy: { ...DEFAULT_SETTINGS.renpy, ...(s.renpy ?? {}) },
+    };
     set({ projects, settings, loaded: true });
   },
 
