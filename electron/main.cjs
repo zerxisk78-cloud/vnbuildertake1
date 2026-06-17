@@ -489,10 +489,30 @@ function tryStaticFile(urlPathname) {
   return abs;
 }
 
+const CSP_HEADER = [
+  "default-src 'self' app: data: blob:",
+  "script-src 'self' 'unsafe-inline' app:",
+  "style-src 'self' 'unsafe-inline' app:",
+  "img-src 'self' app: data: blob: http://127.0.0.1:* http://localhost:*",
+  "media-src 'self' app: blob: http://127.0.0.1:* http://localhost:*",
+  "connect-src 'self' app: ws: wss: http://127.0.0.1:* http://localhost:* https:",
+  "font-src 'self' app: data:",
+].join("; ");
+
+function withCsp(response) {
+  try {
+    response.headers.set("content-security-policy", CSP_HEADER);
+  } catch {
+    /* immutable headers — ignore */
+  }
+  return response;
+}
+
 function registerAppProtocol() {
   protocol.handle("app", async (request) => {
     try {
       const url = new URL(request.url);
+
 
       // 0. Local-asset passthrough: serves any absolute file path on disk so
       //    imported Ren'Py images/audio render directly in <img>/<audio> tags.
