@@ -64,7 +64,7 @@ export function FirstRunWizard() {
 
   return (
     <Dialog open={open} onOpenChange={(v) => !v && done()}>
-      <DialogContent className="max-w-xl">
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Welcome to VN Builder Studio</DialogTitle>
           <DialogDescription>
