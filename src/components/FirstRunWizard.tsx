@@ -64,7 +64,7 @@ export function FirstRunWizard() {
 
   return (
     <Dialog open={open} onOpenChange={(v) => !v && done()}>
-      <DialogContent className="max-w-xl">
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Welcome to VN Builder Studio</DialogTitle>
           <DialogDescription>
@@ -94,11 +94,12 @@ export function FirstRunWizard() {
                     )}
                     <div className="min-w-0">
                       <div className="text-sm font-medium">{meta.label}</div>
-                      <div className="truncate text-xs text-muted-foreground">
+                      <div className="break-words text-xs text-muted-foreground">
                         {r ? (r.detail ?? r.status) : "—"}
                         {meta.required ? "" : " · optional"}
                       </div>
                     </div>
+
                   </div>
                   {!ok && (
                     <Button

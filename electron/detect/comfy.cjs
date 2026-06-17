@@ -60,21 +60,95 @@ module.exports = async function detectComfy(settings) {
   }
 
   // 3) Scan common locations.
-  const candidates = [
-    process.env.USERPROFILE && path.join(process.env.USERPROFILE, "ComfyUI_windows_portable"),
-    "D:\\ComfyUI_windows_portable",
-    "C:\\ComfyUI_windows_portable",
-    "E:\\ComfyUI_windows_portable",
-  ].filter(Boolean);
+  const drives = ["C:", "D:", "E:", "F:", "G:"];
+  const subfolders = ["", "aitools", "AI", "ai", "tools", "Programs"];
+  const folderNames = ["ComfyUI_windows_portable", "ComfyUI-portable", "ComfyUI"];
+
+  const candidates = new Set();
+  if (process.env.USERPROFILE) {
+    for (const sub of subfolders) {
+      for (const name of folderNames) {
+        candidates.add(path.join(process.env.USERPROFILE, sub, name));
+      }
+    }
+  }
+  for (const d of drives) {
+    for (const sub of subfolders) {
+      for (const name of folderNames) {
+        candidates.add(path.join(d + "\\", sub, name));
+      }
+    }
+  }
+  // Also walk the parent of the running app (e.g. D:\aitools\<app>\ -> D:\aitools\)
+  try {
+    let dir = path.dirname(process.execPath);
+    for (let i = 0; i < 4 && dir; i++) {
+      for (const name of folderNames) {
+        candidates.add(path.join(dir, name));
+      }
+      const parent = path.dirname(dir);
+      if (parent === dir) break;
+      dir = parent;
+    }
+  } catch {
+    /* ignore */
+  }
+
   for (const c of candidates) {
-    if (looksLikeComfy(c)) {
-      return {
-        name: "ComfyUI",
-        status: "installed",
-        source: "installed",
-        path: c,
-        detail: "Detected at " + c,
-      };
+    try {
+      if (looksLikeComfy(c)) {
+        return {
+          name: "ComfyUI",
+          status: "installed",
+          source: "installed",
+          path: c,
+          detail: "Detected at " + c,
+        };
+      }
+    } catch {
+      /* ignore */
+    }
+  }
+
+  // 4) Shallow scan: look one level deep inside each "aitools"-style folder
+  //    for a directory whose name starts with "ComfyUI".
+  const scanRoots = new Set();
+  for (const d of drives) {
+    for (const sub of subfolders) {
+      if (sub) scanRoots.add(path.join(d + "\\", sub));
+    }
+  }
+  try {
+    let dir = path.dirname(process.execPath);
+    for (let i = 0; i < 4 && dir; i++) {
+      scanRoots.add(dir);
+      const parent = path.dirname(dir);
+      if (parent === dir) break;
+      dir = parent;
+    }
+  } catch {
+    /* ignore */
+  }
+  for (const root of scanRoots) {
+    try {
+      if (!fs.existsSync(root)) continue;
+      const entries = fs.readdirSync(root, { withFileTypes: true });
+      for (const e of entries) {
+        if (!e.isDirectory()) continue;
+        if (!/^ComfyUI/i.test(e.name)) continue;
+        const full = path.join(root, e.name);
+        if (looksLikeComfy(full)) {
+          return {
+            name: "ComfyUI",
+            status: "installed",
+            source: "installed",
+            path: full,
+            detail: "Detected at " + full,
+          };
+        }
+      }
+    } catch {
+      /* ignore */
     }
   }
 
@@ -82,6 +156,8 @@ module.exports = async function detectComfy(settings) {
     name: "ComfyUI",
     status: "missing",
     source: "missing",
-    detail: "Not running and not found. Download the portable .zip from GitHub.",
+    detail:
+      "Not running and not found. Download the portable .zip from GitHub, or set the path in Settings.",
   };
 };
+
