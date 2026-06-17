@@ -67,6 +67,7 @@ export const isElectron = (): boolean =>
 const LS_PROJECTS_INDEX = "vnstudio:projectIndex";
 const LS_PROJECT = (id: string) => `vnstudio:project:${id}`;
 const LS_SETTINGS = "vnstudio:settings";
+const LS_CHATS = (id: string) => `vnstudio:chats:${id}`;
 
 function lsGet<T>(key: string, fallback: T): T {
   if (typeof localStorage === "undefined") return fallback;
