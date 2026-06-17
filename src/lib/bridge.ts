@@ -16,6 +16,8 @@ export interface LovableApi {
   readProject(id: string): Promise<Project | null>;
   writeProject(project: Project): Promise<void>;
   deleteProject(id: string): Promise<void>;
+  readChats(projectId: string): Promise<ChatMsg[]>;
+  writeChats(projectId: string, messages: ChatMsg[]): Promise<void>;
   readSettings(): Promise<Settings>;
   writeSettings(s: Settings): Promise<void>;
   detectAll(): Promise<Record<string, DepReport>>;
