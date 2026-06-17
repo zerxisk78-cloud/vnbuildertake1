@@ -84,9 +84,9 @@ echo   DONE!
 echo ============================================================
 echo.
 echo Launch the app from:
-echo   dist-electron\VNStudio-win32-x64\VNStudio.exe
+echo   Start-VNStudio.bat
 echo.
-echo Or just double-click Start-VNStudio.bat
+echo The installer records the newest packaged build automatically.
 echo.
 pause
 endlocal
